@@ -1,0 +1,1569 @@
+\documentclass[11pt]{article}
+\usepackage[margin=1in]{geometry}
+\usepackage{amsmath,amssymb,amsthm}
+\usepackage{booktabs}
+\usepackage{graphicx}
+\usepackage[authoryear,round]{natbib}
+\usepackage[hidelinks]{hyperref}
+\newtheorem{theorem}{Theorem}
+\newtheorem{lemma}{Lemma}
+\newtheorem{corollary}{Corollary}
+\newtheorem{proposition}{Proposition}
+\newtheorem{definition}{Definition}
+\newtheorem{example}{Example}
+\providecommand{\E}{\mathbb{E}}
+\providecommand{\KL}{\mathrm{KL}}
+\providecommand{\Phat}{\widehat}
+\providecommand{\TV}{\mathrm{TV}}
+
+\title{What a Code Can Guarantee:\\ Per-Input Feasibility of Knowledge in a Categorical Code,\\
+with an Application to the Variational Information Bottleneck}
+\author{Anonymous Author(s)}
+\date{}
+
+\setlength{\emergencystretch}{3em}
+
+\begin{document}
+\maketitle
+
+\begin{abstract}
+Information-bottleneck analyses quantify how much a code knows \emph{on average}. Deployed
+classifiers are asked a different question: what may they be required to know \emph{about each
+input}. For a finite categorical code we answer that question exactly. The realisable per-input
+accuracy vectors are the image of a finite set of assignments, hence a polytope, so the per-input
+ceilings and the best uniform guarantee $t^\star$ are linear programmes. We construct a family of
+codes with identical $I(X;Z)$, $I(Y;Z)$, $I(Z;C)$ and Bayes-optimal aggregate accuracy but
+$t^\star\in\{0,0.25,0.40,0.50\}$; no average-information functional we can compute distinguishes
+them, including decodable information, for which all $2^{18}$ decoders are enumerated on four
+profiles. In the extreme member every input's individual ceiling is $1$ while $t^\star=0$, and a
+two-thirds worst-class floor coexists with a zero per-input floor. We then separate guarantee from
+expectation: randomised decoders attain $t^\star_{\rm LP}=0.5$ where every deterministic decoder
+attains $0$, and this gap is a property of the alphabet rather than of the guarantee. Refining each
+atom into $L$ parts leaves the LP value fixed and lifts the deterministic guarantee to within $1/L$;
+on a nonatomic code the relaxation is exact (Dvoretzky--Wald--Wolfowitz). On six rate ladders over
+three trained codes the guarantee steps from $1.000$ to $0.000$ while the channel's own Bayes
+accuracy is still decaying smoothly, and end-to-end training at seven widths ($16\le z\le256$) puts
+the onset rung, the zero rung and the coarsest-rung occupancy in monotone order of width: the
+transition tracks shared cells, not code size, and it replicates across seeds and table sizes where
+the height of an individual step does not. Unfreezing the last block of an ImageNet-pretrained
+ResNet-18 buys accuracy, moves the onset in one of four paired seeds and never the collapse rung.
+Second, the pointwise information-density identity splits a
+realisation's bits into class-shared and input-idiosyncratic parts. On trained VIBs the raw density
+is anti-informative about correctness (AUC $0.042$--$0.481$), while the shared part reaches AUC
+$0.894$ against $0.884$ for max-softmax. We state where the argument stops: the blindness is a
+constructed family, the Gaussian statement covers only the rate-side functionals, the per-input
+frontier costs $K^m$ to enumerate and is not a deployable method, and at $\beta=0$ confidence
+wins.
+\end{abstract}
+
+\section{Introduction}
+An information bottleneck is scored in expectation: a code $Z$ carries $I(X;Z)$ bits, of which
+$I(Y;Z)$ concern the label \citep{alemi2017vib,tishby1999}. Recent work asks \emph{which}
+variables those bits should concern \citep{structured2026,sourcesuff2024,whatsubject2026,scib2026},
+and a companion average-level study of the same question treats correctness and novelty as
+competing relevance variables with a coverage ceiling \citep{knowing2026}. Expectations are the
+right currency for expectations. They are the wrong currency for three deployment questions:
+can this classifier be \emph{required} to be right about this input; can it be required to be
+right about \emph{every} input at some level; and how many bits did this input cost to code.
+The second question in particular has no average analogue: it is a statement about the joint
+feasibility of a vector of per-input accuracies.
+
+We answer it for a finite categorical code, exactly. A decoder is a map from codes to labels, so
+the achievable per-input accuracy vectors form the image of a finite set of assignments: a
+polytope. Per-input ceilings and the best uniform guarantee are then linear programs, and we
+can (i) characterise them, (ii) enumerate them in small instances, and (iii) separate them from
+everything an average mutual information can say.
+
+\paragraph{Contributions.}
+\emph{Core results.}
+\begin{enumerate}
+\item \textbf{Blindness of average-rate theory (Theorem~\ref{thm:blind}, our main result).}
+A family of codes, indexed by a per-input knowledge profile $p\in[0,1]^m$, in which
+$I(X;Z)$, $I(Y;Z)$, $I(Z;C)$ and the Bayes-optimal aggregate accuracy $\pi_{\max}$ are functions
+of $\bar p=\frac1m\sum_k p_k$ only, while the optimal uniform per-input guarantee
+$t^\star=\max_f\min_x a_x(f)$ equals $\min_k p_k$. Four instances with identical
+$\bar p=0.5$ have $t^\star\in\{0,0.25,0.40,0.50\}$. No average-information statement, including
+the coverage ceiling of \citet{knowing2026}, can distinguish them; nor is this an artefact of
+measuring the code by a mutual information, because the decodable-information optimum of
+\citet{dubois2020}, computed by enumerating all $2^{18}$ decoders of each profile, is the same
+$0.311278$ bits on all four. This is a statement about the constructed family, not a
+classification of all codes; Section~\ref{sec:rate} asks which of its mechanisms survive on
+trained ones.
+\item \textbf{Congestion, and group guarantees do not imply input guarantees.} In the same family
+every input's individual ceiling is $1$ while $t^\star=0$: each input \emph{can} be known, but
+not all at once. The optimal \emph{per-class} (group-DRO) accuracy floor is $0.667$ while the
+optimal \emph{per-input} floor is $0.000$: a classifier can satisfy a two-thirds worst-class
+accuracy requirement and still be certain to fail on specific inputs. Worst-group fairness and
+individual feasibility are different properties of the same code
+(Section~\ref{sec:groups}), and only the second is what an input-level service requirement needs.
+\item \textbf{Guarantees versus expectations, and why the gap is about the alphabet
+(Proposition~\ref{prop:gap}).} Randomised decoders make the LP relaxation tight at
+$t^\star_{\rm LP}=0.5$ where the deterministic guarantee is $0$; on the blindness family the gap
+has a closed form for every profile, $\tfrac12(1-\min_k p_k)$, and on random channels it
+reaches $0.42$. Demanding a per-input guarantee is therefore strictly harder than demanding an
+average. Refining each atom into $L$ sub-atoms leaves the LP value fixed and lifts the
+deterministic guarantee to within $1/L$ of it, at a cost of $\ln L$ nats of alphabet entropy and
+nothing under a relative-entropy rate with a matched prior; on a nonatomic (Gaussian) code the
+relaxation is \emph{exact}, by the partition theorem of \citet{dvoretzky1951}. The gap is thus an
+artefact of discretising a continuous latent --- which is what the ladder experiments do.
+\item \textbf{A computable certificate and its measured dissociation.} The pointwise chain rule
+for information density \citep{hellstrom2021,verdu2012} splits one realisation's bits into
+evidence shared with the decoded class and input-idiosyncratic bits. On trained VIBs the raw
+density is anti-informative about correctness (per-model AUC $0.042$--$0.481$), whereas the
+shared-typicality term reaches AUC $0.959$ and beats max-softmax and logit adjustment on the
+harder task, using no trained head and no test label. It is a correctness-ranking score, not a
+frontier estimator: it needs a genuine channel ($\beta>0$; at $\beta=0$ max-softmax wins all six
+cells), and decoded-class typicality, which keeps the idiosyncratic bits, wins five of six MNIST
+cells.
+\end{enumerate}
+
+\emph{Supporting observations and negative results.}
+\begin{enumerate}\setcounter{enumi}{4}
+\item \textbf{The transition on trained codes (Section~\ref{sec:rate}).} Discretising the
+stochastic channel and solving the frontier at each rate turns $t^\star$ from $1.000$ to $0.250$
+to $0.000$ exactly when occupied cells start being shared across labels, while the deployed
+accuracy is unchanged and the channel's Bayes accuracy decays smoothly. The staircase reappears on
+six ladders over three trained codes (two FashionMNIST seeds and MNIST): the location of the
+transition moves, its shape does not. End-to-end training at $z=32$ keeps the staircase, and seven
+widths from $z=16$ to $z=256$ put both the onset rung and the coarsest-rung cell count in
+non-decreasing order of $z$; at $z=256$ cells merge only past $\times13$, and the collapse follows,
+which ties the transition to cell sharing rather than to width. Unfreezing the last block of an ImageNet-pretrained ResNet-18
+moves the deployed accuracy ($0.825\to0.850$) and not the collapse rung.
+What is an observation, not a theorem, is monotonicity along a
+ladder: $42$ of $42$ consecutive pairs happen to be monotone, but re-snapping at a non-nesting
+step ratio is not a Markov-kernel coarsening at all, so the guarantee is free to rise.
+\item \textbf{A closed form that is exact where the code is clean and vacuous where it is
+congested (Lemma~\ref{lem:pair}).} The least cross-label total variation upper-bounds $t^\star$
+through $\tfrac12(1+\mathrm{TV})$ and matches the LP at the fine end of real codes; at the
+congested end the minimum TV is $0$ while $t^\star=0$, and the bound sits up to $0.562$ above the
+LP value.
+\item \textbf{Where monotonicity actually holds (Proposition~\ref{prop:coarsen}).} A Markov
+kernel embeds the feasible set of the coarse code into the fine code's, so the LP guarantee and
+every ceiling are monotone under coarsening at a fixed floor; deterministic decoders need a
+\emph{deterministic} lumping. The separation is measured: the deterministic guarantee reverses in
+$205$ of $360$ random kernel trials, and non-nesting lattice steps raise it in $1927$ of $24336$
+enumerable points while the genuine lumping never does. Numerically, $0$ violations in $180$ LP,
+$120$ exact and $1080$ ceiling comparisons, and the lumping identity holds to $5.6\cdot10^{-17}$ on
+odd-ratio lattices of a real trained code.
+\item \textbf{Negative results, reported.} The frontier costs $K^m$ to enumerate and is not a
+deployable method; per-input bit allocation under a measured-byte budget gains $\le0.004$
+accuracy over uniform precision; and the per-input comparison between the optimised prior-KL and
+the deployed density is a unit-dependent statistic, which we do not elevate to a theorem.
+\end{enumerate}
+
+\paragraph{What is not new (and we do not claim it).}
+The identity
+$\log_2\frac{Q(z|x)}{\bar P_y(z)}=\log_2\frac{Q(z|x)}{\bar P(z)}-\log_2\frac{P(y|z)}{P(y)}$
+is the pointwise chain rule for information density \citep{hellstrom2021,verdu2012}, and the same
+algebra appears inside the proof of Theorem 3 of \citet{structured2026}, which then takes the
+expectation; we use it as bookkeeping. The per-input ceiling of Theorem~\ref{thm:ceiling} is an
+instance of Le Cam's method / Blackwell's comparison of experiments
+\citep{raginsky2011,torgersen1991}, and Hellstr\"om--Durisi's Lemma 1 already converts an
+information density into a per-event probability bound \citep{hellstrom2021}.
+Proposition~\ref{prop:coarsen}(a) is likewise an ordinary Blackwell-composition argument --- a
+randomised decoder composed with a kernel is a randomised decoder --- and we claim no novelty for
+it; its content is the separation in (b)--(c), that the \emph{deterministic} guarantee needs a
+deterministic lumping and otherwise reverses. The score in
+Corollary~\ref{cor:correct} is close in spirit to prior-corrected logit adjustment
+\citep{menon2021} and to aggregate-posterior typicality \citep{typicality2019}; both are included
+as baselines rather than as things we invented. The novelty we claim is the per-input feasibility
+structure of a code --- the frontier of Section~\ref{sec:frontier}, together with the constructed
+families that exercise it, including the blindness family and the group-versus-input separation
+of Section~\ref{sec:groups} --- and the measured dissociation between the two terms of the
+decomposition (Section~\ref{sec:dissociation}).
+
+\paragraph{Where the claims stop.} Four limits are load-bearing and are stated here rather than in
+a footnote. (i) Blindness is a theorem about the constructed family, not a classification of
+codes: the decodable-information statement is an enumeration of four profiles, not a general
+theorem. (ii) On a nonatomic code only the rate-side functionals are held fixed; $I(Y;Z)$ and
+$\pi_{\max}$ move with the labelling, and the paper says so where it uses them. (iii) Monotonicity
+along a trained ladder is an observation ($42$ of $42$ pairs), not a corollary, because re-snapping
+at a non-nesting step ratio is not a kernel coarsening; the theorem covers kernel coarsening. (iv)
+The per-input ceiling is vacuous on most inputs at a useful floor ($244$ of $266$ random and $965$
+of $1009$ synthetic), so it bounds a small set of fragile inputs rather than certifying a
+classifier, and the pair bound is slack in the congested middle (up to $0.562$, with $t^\star=0$ at
+nine levels).
+
+\section{Preliminaries: the two terms of one realization}
+$X\sim P$ on a finite set, label $y(x)\in\{1..K\}$, code $Z$ with channel $Q(z|x)$, aggregate
+posterior $\bar P(z)=\sum_x P(x)Q(z|x)$ and class-conditional aggregate
+$\bar P_c(z)=\sum_{x:y(x)=c}P(x|c)Q(z|x)$, so $\bar P=\sum_c P(c)\bar P_c$. A deterministic
+decoder is $f:\mathcal Z\to{\{1..K\}}$, $\hat y=f(z)$, $C=\mathbf 1[\hat y=Y]$, $\pi=\E C$.
+Our $C$ is the companion study's correctness bit with the reference fixed to the deployed decoder,
+$r=f\circ q$. Their average ceiling $I(Z;C)+1-H_b(\pi)$ is an aggregate of the same per-input
+object at full coverage ($\phi=1$, no abstention): it constrains the mean of our ceilings but does
+not determine our $t^\star$, which is a minimum over inputs.
+
+\begin{lemma}[Pointwise chain rule; bookkeeping, not a contribution]\label{lem:chain}
+For every $(x,z)$ with $Q(z|x)>0$, with $y=y(x)$,
+$i(x,z)=\Lambda_y(z)+e_y(x,z)$ where
+$i=\log_2\![Q/\bar P]$, $\Lambda_y=\log_2[P(y|z)/P(y)]$, $e_y=\log_2\![Q/\bar P_y]$.
+Taking the expectation over $Q(\cdot|x)$ gives
+$\rho(x)=\E_{z|x}[\Lambda_y]+\KL_2(Q(\cdot|x)\|\bar P_{y(x)})$, and the second term is
+$\ge0$; averaging over $x$ gives $I(X;Z)=I(Y;Z)+I(X;Z|Y)$.
+\end{lemma}
+\begin{proof}
+Bayes with $P(z|y)=\bar P_y(z)$; expectations as stated. This is the chain rule for
+information density and conditional information density \citep{hellstrom2021,verdu2012},
+standard in the information-spectrum literature.
+\end{proof}
+Lemma~\ref{lem:chain} is used below only to name the two terms: $e_y$ is the
+\emph{idiosyncratic} part of the bits of this realization, $\Lambda_y$ the part shared with the
+class. In source-coding terms $e_y$ is the \emph{mismatched-coding redundancy}: the excess length
+paid for coding with the class aggregate $\bar P_y$ rather than the input's own $Q(\cdot|x)$.
+Bits-back coding turns this excess back into usable side information \citep{bitsback2021}, and
+variance-equalised VAEs rebalance the same prior-versus-aggregate mismatch \citep{lambdavae2026}.
+Its operational content is the empirical dissociation in Section~\ref{sec:dissociation},
+not the algebra.
+
+\begin{corollary}[Deployed readout]\label{cor:correct}
+For any class $c$, $\Lambda_c(z)=i(x,z)-e_c(x,z)$. With $c=f(z)$ and
+$P(C=1|z)=P(f(z)|z)$,
+$\log_2[P(C=1|z)/P(f(z))]=\log_2[\bar P_{f(z)}(z)/\bar P(z)]$,
+a quantity computable from the encoder and the training-label mixtures alone.
+\end{corollary}
+\emph{Relation to prior-normalised posteriors.} The ratio $\bar P_{f(z)}(z)/\bar P(z)$ is the
+prior-normalised aggregate posterior at the code symbol: dividing an input's code density by the
+class-average density removes the class prior. That correction is what logit adjustment
+\citep{menon2021} and balanced softmax \citep{balanced2020} apply at the logit level, and what
+likelihood-ratio selective classification thresholds \citep{heng2025abstain}. What is new here is
+not the ratio but the split of the per-input density into shared and idiosyncratic terms, and the
+use of the idiosyncratic term as a correctness score.
+
+\section{The achievable-knowledge frontier}\label{sec:frontier}
+\begin{definition}[Achievable set]
+For a code $Q$ and required aggregate accuracy $\pi_0$, let
+$\mathcal A(\pi_0)=\{a\in\mathbb R^n:\exists$ deterministic $f$ with $a_x=\sum_z Q(z|x)\mathbf 1[f(z)=y(x)]$
+and $\sum_x P(x)a_x\ge\pi_0\}$. Define the per-input ceiling
+$\mathrm{ceil}(x)=\max\{a_x:a\in\mathcal A(\pi_0)\}$ and the optimal uniform guarantee
+$t^\star=\max\{t:\exists a\in\mathcal A(\pi_0),\ a_x\ge t\ \forall x\}$.
+\end{definition}
+Both are attained by linear programmes over the assignment polytope
+$\{u\in[0,1]^{m\times K}:\sum_c u_{z,c}=1\ \forall z\}$ with the single additional linear
+constraint $\sum_c P(c)\sum_z u_{z,c}\bar P_c(z)\ge\pi_0$; the relaxation is valid for
+$\mathrm{ceil}(x)$ (any deterministic decoder is a feasible integer point) and only upper-bounds
+$t^\star$, since randomised assignments are allowed.
+
+\begin{proposition}[Blindness family]\label{prop:family}
+Let $X=\{0,\dots,2m-1\}$ uniform, $y(x)=x\bmod 2$, and let $p\in[0,1]^m$ define the channel in which the
+two inputs of pair $k$ each emit a private code with probability $p_k$ and a shared code with
+probability $1-p_k$. Codes are $\{$private$_0,\dots,$ private$_{2m-1},$ shared$_0,\dots,$
+shared$_{m-1}\}$, with pair $k\in\{0,\dots,m-1\}$ the inputs $2k$ and $2k+1$. With the decoder reading private codes correctly and guessing on shared codes,
+\[
+I(Y;Z)=\bar p,\qquad I(X;Z)=\log_2 2m-(1-\bar p),\qquad
+I(Z;C)=H_b\!\bigl(\tfrac{1+\bar p}{2}\bigr)-(1-\bar p),\qquad \pi=\tfrac{1+\bar p}{2},
+\]
+with $\bar p=\frac1m\sum_k p_k$, and $\pi_{\max}=\pi$. Per-input accuracy under any decoder
+satisfies $a_{2k}=p_k+(1-p_k)\mathbf 1[f(\text{shared}_k)=0]$ and
+$a_{2k+1}=p_k+(1-p_k)\mathbf 1[f(\text{shared}_k)=1]$.
+\end{proposition}
+
+\begin{theorem}[Blindness of average-rate accounts]\label{thm:blind}
+In the family of Proposition~\ref{prop:family}, every statement built from average mutual
+informations of the code --- including $I(X;Z)$, $I(Y;Z)$, $I(Z;C)$, $\pi$ and $\pi_{\max}$, and
+therefore any coverage ceiling expressed through them --- is a function of $\bar p$ only, while
+$t^\star=\min_k p_k$. Hence codes that are indistinguishable to average-rate theory admit
+uniform guarantees ranging from $0$ to $\tfrac12$.
+\end{theorem}
+\begin{proof}
+The displayed formulas depend on $p$ only through $\bar p$. For each pair, the shared code can be
+assigned to at most one of the two labels, so $\min(a_{2k},a_{2k+1})\le p_k$; assigning it to the
+label of the pair's weaker input attains $p_k$. Maximising the minimum over pairs subject to
+$\pi\ge\pi_{\max}$ (which forces exactly one label per shared code, since $\pi_{\max}$ is
+attained only by decoders that read private codes correctly) gives $t^\star=\min_k p_k$.
+\end{proof}
+
+\paragraph{The blindness is not an artefact of choosing mutual information.}
+Decodable-information accounts \citep{dubois2020} score a code not by $I(Y;Z)$ but by
+$\max_{D}I(Y;\hat Y)$, the label information extractable by the best decoder of the code, which is a
+different functional and is not covered by the theorem as stated. It is blind on the same family.
+Enumerating all $2^{18}$ deterministic decoders of each of the four $\bar p=\tfrac12$ profiles gives
+$\max_f I(Y;f(Z))=0.311278$ bits in every profile --- coinciding there with $I(Z;C)$ --- while
+$t^\star$ is $0.000$, $0.500$, $0.400$ and $0.250$ (\texttt{code2/decodable\_blindness.py}). The
+enumeration is exhaustive for \emph{stochastic} decoders too: $I(Y;\hat Y)$ is concave in the
+decoder channel and a concave function attains its maximum at a vertex of the row-stochastic
+polytope, so the deterministic maximum is the stochastic maximum; a multistart optimisation agrees
+to six decimals.
+Decodability-optimal decoders can be the worst possible for individual feasibility: the
+enumeration returns one whose least-served input has accuracy $0.000$ in all four profiles,
+including the uniform one, where a decoder with per-input guarantee $0.500$ exists. The functional
+is indifferent between maximisers, however: flipping the decoder's two outputs leaves
+$I(Y;\hat Y)$ unchanged, and the flip of the returned maximiser attains $t^\star$ as its
+least-served accuracy in every profile. The contrast is therefore between what average
+decodability selects and individual feasibility, not between one average functional and another.
+
+\begin{lemma}[Which lattice steps nest]\label{lem:oddstep}
+Cell a sample by rounding: $\mathrm{cell}_{d}(v)=k$ iff $v\in[d(k-\tfrac12),d(k+\tfrac12))$
+and take the step ratio $r=\delta_c/\delta_f$ to be an integer. Coarse boundaries then sit at
+$\delta_c(j+\tfrac12)=\delta_f\,r(j+\tfrac12)$. If $r$ is odd, that is a half-integer multiple
+of $\delta_f$ and hence also a fine boundary, so \emph{no} fine cell is split and re-snapping a
+sample set at step $\delta_c$ is a lumping of its channel at step $\delta_f$: the coarse code is
+a function of the fine code. If $r$ is even, those boundaries are integer multiples of $\delta_f$
+strictly inside fine cells, so the re-snap is a lumping only if no input happens to put samples on
+both sides -- an occupancy accident, not a property of the lattice. Monotonicity along a rate
+ladder therefore has a lattice-theoretic hinge: at odd ratios the ladder is a sequence of lumpings
+and Proposition~\ref{prop:coarsen}(b) applies to it, while at even ratios it is not a kernel
+coarsening at all, which is where the reversals of Section~\ref{sec:rate} live.
+\end{lemma}
+\begin{proof}
+For odd $r$, $r(j+\tfrac12)=r(2j+1)/2$ has an odd numerator, so every coarse boundary is a fine
+boundary; coarse cells are unions of fine cells and
+$\Lambda(z'\,|\,z)=\mathbf 1[z'=\mathrm{cell}_{\delta_c}(\delta_f z)]$
+is a deterministic kernel. For even $r$, $r(j+\tfrac12)$ is an integer lying strictly inside the
+fine cell that contains it, so two samples of one input on opposite sides of that boundary make
+the coarse code depend on more than the fine code. Both directions are checked mechanically on $3200$ channel tests over the integer ratios $1$ to $8$: no odd ratio splits a cell ($0$ of $1600$ tests), and the grouped construction reproduces the directly built coarse channel exactly in every one of them ($1600$ of $1600$), while the even ratios split a cell in $1019$ of $1600$ tests and in all $1019$ of those the two channels differ ($0$ exceptions, $1019$ differences recorded). The split rate falls with the ratio as the geometry predicts, from $400$ of $400$ at $r=2$ to $58$ of $400$ at $r=8$ (\texttt{code2/oddstep\_nesting.py}).
+\end{proof}
+
+\begin{proposition}[Congestion]\label{prop:congest}
+For $p=(1,1,1,0,0,0)$, $\mathrm{ceil}(x)=1$ for every input while $t^\star=0$.
+\end{proposition}
+\begin{proof}
+Verified by full enumeration (Section~\ref{sec:exp}): any single input can be made certain by a
+decoder that sacrifices a different pair, but the three $p_k=0$ pairs each contain an input that
+must be wrong, so the minimum is $0$.
+\end{proof}
+
+\begin{proposition}[Guarantees cost integrality]\label{prop:gap}
+For every $p\in[0,1]^m$ in the family of Proposition~\ref{prop:family}, the LP relaxation at
+floor $\pi_0=\pi_{\max}$ equals $\frac12(1+\min_k p_k)$ while $t^\star=\min_k p_k$, so the gap is
+$\frac12(1-\min_k p_k)$ exactly: for $p=(1,1,1,0,0,0)$ it reports $0.5$ while $t^\star=0$; for the
+other instances it reports $0.75$, $0.70$, $0.625$ against exact $0.50$, $0.40$, $0.25$.
+\end{proposition}
+\begin{proof}
+The upper bound is Lemma~\ref{lem:pair}: within pair $k$ the two rows share mass $1-p_k$ on one
+code, so their total variation is $p_k$ and $t\le\frac12(1+p_k)$ for every $k$. For the lower
+bound, the randomised decoder that reads every private code to its own label and splits every
+shared code evenly attains $a_x=\frac12(1+p_k)$ on both inputs of pair $k$, hence
+$\min_x a_x=\frac12(1+\min_k p_k)$, and its average accuracy is exactly $\pi_{\max}$. The LP and
+the exact enumeration on $36$ profiles ($23$ of them enumerated, $\min_k p_k$ at $0$, near $1$ and
+$1$) agree with both closed forms to $10^{-9}$ (\texttt{code2/family\_general.py}).
+\end{proof}
+A randomised decoder buys \emph{expected} accuracy per input, not a guarantee: with probability
+$1/2$ it answers the sacrificed input wrongly. Requiring a guarantee rather than an expectation
+is what the integrality gap measures.
+
+How large that gap is depends on the alphabet, and the dependence is exact rather than
+asymptotic: the relaxation is a phenomenon of \emph{granularity}, and it disappears on a
+continuous code.
+
+\begin{proposition}[Granularity buys the relaxation]\label{prop:gran}
+Write $t^\star_{\rm LP}(Q)$ for the LP value of $t^\star$. Let $Q^{(L)}$ be the code that replaces
+every atom of $Q$ by $L$ sub-atoms, each carrying mass $Q(z\mid x)/L$ for every input $x$. Then
+$t^\star_{\rm LP}(Q^{(L)})=t^\star_{\rm LP}(Q)$ for every $L$, and
+\[
+t^\star_{\rm LP}(Q)-\frac1L\ \le\ t^\star(Q^{(L)})\ \le\ t^\star_{\rm LP}(Q).
+\]
+Refinement raises the alphabet entropy by exactly $\ln L$ nats and leaves the
+relative-entropy rate $\mathbb E_x\,\mathrm{KL}(Q(\cdot\mid x)\,\|\,P_Z)$ unchanged when the
+prior is split in the same proportion.
+\end{proposition}
+\begin{proof}
+Rounding gives the left inequality: take an LP-optimal $u$, and for each atom $z$ give its
+sub-atoms the integer counts $n_{z,c}$ produced from $L u_{z,c}$ by the largest-remainder rule,
+so that $\sum_c n_{z,c}=L$ and $|n_{z,c}/L-u_{z,c}|<1/L$ for every $c$. The induced deterministic
+decoder has accuracy $\sum_z Q(z\mid x)n_{z,y(x)}/L$, which is short of
+$\sum_z Q(z\mid x)u_{z,y(x)}$ by at most $(1/L)\sum_z Q(z\mid x)=1/L$. The right inequality is
+that deterministic decoders are feasible for the LP. The LP value itself does not move: replicating
+each atom $L$ times makes any coarse feasible point available on $Q^{(L)}$, so $t^\star_{\rm LP}$
+cannot drop, and averaging a refined solution over the $L$ sub-atoms of each parent leaves every
+input law unchanged while preserving the guarantee, so it cannot rise. For the rates,
+$-\sum_z\sum_i (P(z)/L)\ln(P(z)/L)=H(Z)+\ln L$ because the split is uniform, while in
+$\mathrm{KL}$ the same factor $1/L$ appears inside numerator and denominator and cancels term by
+term.
+\end{proof}
+
+\begin{proposition}[Continuous codes have no integrality gap]\label{prop:atomless}
+Let the code take values in a measurable space, all of whose laws $Q(\cdot\mid x)$ are dominated by
+a nonatomic measure, and let $t^\star$ range over measurable decoders. Then $t^\star=t^\star_{\rm
+LP}$: the relaxation of Proposition~\ref{prop:gap} is exact, and the guarantee it computes is
+attained by an honest function of the code.
+\end{proposition}
+\begin{proof}
+Deterministic decoders are kernels, so $t^\star\le t^\star_{\rm LP}$. For the reverse, let $u^*$ be
+LP-optimal and put $t_{x,c}=\int u^*(\mathrm dz,c)\,Q(\mathrm dz\mid x)$; each row sums to
+$Q_x(\mathcal Z)=1$. The vector measure $\nu=(Q(\cdot\mid x))_{x}$ on the code space is nonatomic,
+so the partition theorem of \citet{dvoretzky1951} --- the same ingredient behind the convexity of
+the range of a nonatomic vector measure \citep{lyapunov1940} --- supplies a measurable partition
+$(A_c)_c$ of the code space with $Q(A_c\mid x)=t_{x,c}$ for every pair $(x,c)$ at once. The decoder
+answering $c$ on $A_c$ then reproduces the LP accuracy vector exactly, aggregate term included.
+\end{proof}
+
+\begin{corollary}[When the pair bound is exact]\label{cor:pairtight}
+For a nonatomic code and two inputs of different labels at floor $\pi_0=0$, the bound of
+Lemma~\ref{lem:pair} is attained if the two laws form a symmetric location family, i.e.\
+$Q(\cdot\mid x)$ has density $h(z-\mu)$ and $Q(\cdot\mid x')$ has density $h(z-\mu')$ with $h$
+symmetric about $0$ and strictly decreasing away from it; then
+$t^\star=\tfrac12(1+\mathrm{TV}(Q_x,Q_{x'}))$. It can be strict when the shapes differ.
+\end{corollary}
+\begin{proof}
+The separating set is the half-space $A=\{z:h(z-\mu)>h(z-\mu')\}=\{z>z_0\}$ with $z_0$ the unique
+crossing point, so $Q(A\mid x)=1-F(z_0-\mu)$ and $Q(A\mid x')=1-F(z_0-\mu')$, where $F$ is the
+cubic integral of $h$. Symmetry gives $F(-t)=1-F(t)$, and because the two densities are equal at
+$z_0$ the points $z_0-\mu$ and $z_0-\mu'$ are opposites, so the two accuracies sum to $1$; together
+with $Q(A\mid x)-Q(A\mid x')=\mathrm{TV}(Q_x,Q_{x'})$ this makes each of $Q(A\mid x)$ and
+$Q(A^c\mid x')$ equal to $\tfrac12(1+\mathrm{TV})$, which is the bound, and Lemma~\ref{lem:pair}
+forbids more. Without the symmetry the sum need not be $1$: the numerical pair in
+Section~\ref{sec:granularity} with unit and doubled variance leaves the bound strictly above the
+guarantee.
+\end{proof}
+
+\begin{corollary}[A lattice underestimates]\label{cor:conservative}
+Let $Q_\delta$ be the code obtained by rounding a nonatomic code $Q$ to a lattice of step $\delta$.
+Then $t^\star(Q)\ge t^\star(Q_\delta)$, and the same holds with the LP value on the right. The
+guarantees measured on the rate ladders of Section~\ref{sec:rate} are therefore lower bounds on the
+guarantee of the undiscretised code: discretising a latent cannot manufacture joint feasibility,
+only lose it.
+\end{corollary}
+\begin{proof}
+Rounding is a measurable map, so every decoder of $Q_\delta$, composed with it, is a decoder of $Q$
+attaining the same per-input accuracies and hence the same aggregate: the feasible accuracy set of
+$Q_\delta$ is contained in that of $Q$, and the same inclusion holds for kernels, which gives the
+second claim once Proposition~\ref{prop:atomless} identifies the continuous LP with the continuous
+guarantee. The inclusion is generally strict --- mixing across a cell boundary is exactly what a
+coarse cell does --- and Section~\ref{sec:granularity} measures that slack for one Gaussian code at
+four steps.
+\end{proof}
+
+\begin{lemma}[Pair bound on the guarantee]\label{lem:pair}
+For any code $Q$ and any floor $\pi_0$,
+\[
+t^\star(Q,\pi_0)\ \le\ \tfrac12\Bigl(1+\min_{x,x':\,y(x)\neq y(x')}
+\mathrm{TV}\bigl(Q(\cdot|x),Q(\cdot|x')\bigr)\Bigr).
+\]
+\end{lemma}
+\begin{proof}
+Fix a decoder and a cross-label pair. The sets $A=\{z:f(z)=y(x)\}$ and
+$B=\{z:f(z)=y(x')\}$ are disjoint, so
+$a_x+a_{x'}=Q_x(A)+Q_{x'}(B)\le Q_x(A)+1-Q_{x'}(A)\le 1+\mathrm{TV}(Q_x,Q_{x'})$, and the
+smaller of the two accuracies is at most half of that. For a randomised decoder the same inequality
+holds with $g_x=u(\cdot,y(x))\in[0,1]$ in place of the indicator of $A$: $a_x+a_{x'}=\int
+g_x\,dQ_x+\int(1-g_x)\,dQ_{x'}\le 1+\mathrm{TV}$, so the bound covers every deterministic decoder,
+the best one, and the LP. \citet{raginsky2011} gives the two-point
+method in this form; the point here is that on the blindness family the bound is \emph{exact}:
+the least cross-label TV is $\min_k p_k$ and the LP value is $\tfrac12(1+\min_k p_k)$ for every
+$p$ (Proposition~\ref{prop:gap}), the four profiles reading $0.500$, $0.750$, $0.700$ and $0.625$
+(\texttt{code2/family\_general.py}). So the guarantee of a code
+whose confusions are pairwise is computable in closed form; where it is not, the slack of this
+bound measures how much of the obstruction is many-way sharing rather than any single pair.
+\end{proof}
+
+\begin{proposition}[Coarsening cannot help]\label{prop:coarsen}
+Let $\Lambda$ be a Markov kernel and $Q'=Q\Lambda$ the coarsened channel.
+\emph{(a)} For the LP guarantee and the per-input ceilings, $t^\star(Q,\pi_0)\ge
+t^\star(Q',\pi_0)$ and $\mathrm{ceil}_x(Q)\ge\mathrm{ceil}_x(Q')$ for every $x$, at any fixed
+floor $\pi_0$. \emph{(b)} If $\Lambda$ is deterministic --- a lumping, each fine code lying in one
+coarse code --- the same holds for the \emph{exact} guarantee over deterministic decoders.
+\emph{(c)} The qualification in (b) is necessary: over 360 random
+trials (Example~\ref{ex:kernel} gives the smallest one in exact arithmetic) in which a stochastic
+kernel follows a lumping, the exact guarantee \emph{increases} in
+205 of them, while the LP guarantee never increases
+(0 violations in 360 comparisons).
+\end{proposition}
+\begin{proof}[Sketch]
+Given a decoder $u'$ for $Q'$, put $u_{z,c}=\sum_{z'}\Lambda(z,z')u'_{z',c}$. Then
+$\sum_z Q(z|x)u_{z,y(x)}=\sum_{z'}Q'(z'|x)u'_{z',y(x)}$ and the same identity holds with the
+class-conditional aggregate in place of $Q(\cdot|x)$, so $u$ reproduces $u'$'s per-input accuracy
+vector \emph{and} its aggregate accuracy: the feasible set of $Q'$ embeds in that of $Q$. When
+$\Lambda$ is a lumping, $u$ is $0/1$ whenever $u'$ is, which is what (b) needs and (c) shows to be
+essential. Counterexample search and the verification that lattice refinement really is a lumping
+when the step ratios are odd: \texttt{code2/lumping\_check.py}.
+\end{proof}
+
+\begin{example}[Why the lumping has to be deterministic]\label{ex:kernel}
+Two inputs with $y(x_1)=0$, $y(x_2)=1$, two codes, and no aggregate floor
+($\pi_0=0$): $Q(\cdot|x_1)=(1,0)$ and $Q(\cdot|x_2)=(\tfrac12,\tfrac12)$. The four deterministic
+decoders give the four accuracy vectors $(1,0)$, $(1,\tfrac12)$, $(0,\tfrac12)$, $(0,1)$. The
+point mass at $z_1$ ties the answer on $x_1$ to the answer at $z_1$, so the two decoders that are
+right on the noiseless input are right with probability $0$ or $\tfrac12$ on the ambiguous one;
+a decoder that is right on $x_2$ with probability $1$ is wrong on $x_1$. Hence
+$t^\star_{\rm det}(Q)=\tfrac12$. Now apply the kernel
+$\Lambda(z_1)=(\tfrac13,\tfrac23)$, $\Lambda(z_2)=(1,0)$, which is \emph{not} a lumping. The
+coarse channel is $Q'(\cdot|x_1)=(\tfrac13,\tfrac23)$, $Q'(\cdot|x_2)=(\tfrac23,\tfrac13)$, and
+the single deterministic decoder that answers $1$ on $z_1$ and $0$ on $z_2$ is right with
+probability $\tfrac23$ on both inputs, so $t^\star_{\rm det}(Q')=\tfrac23 >
+\tfrac12$. The randomised value does not invert, exactly as
+(a) predicts: the LP gives $t^\star(Q)=t^\star(Q')=\tfrac23$ (verified against a
+second, independent solver). What the kernel destroyed is the point mass that pinned the decoder at
+$z_1$: on $Q$ the value $\tfrac23$ needs $u_{z_1,0}=\tfrac23$, i.e.\ a genuinely randomised
+decoder, while on $Q'$ a deterministic one attains it. So the hypothesis in (b) is doing real work,
+and the reversal is not an artefact of the aggregate constraint, which is inactive here.
+\end{example}
+
+\begin{figure}[t]
+\centering
+\includegraphics[width=\textwidth]{figs/fig_frontier.pdf}
+\caption{Left: the optimal uniform per-input guarantee $t^\star$ for four codes with identical
+$I(X;Z)$, $I(Y;Z)$, $I(Z;C)$ and $\pi=\pi_{\max}$ (Theorem~\ref{thm:blind}), computed by
+enumerating all $2^{18}$ decoders, together with the LP relaxation over randomised decoders
+(Proposition~\ref{prop:gap}). Right: the concentrated profile, where every input's ceiling is
+$1.000$ and yet $t^\star=0$: ceilings are marginal, guarantees are joint.}
+\label{fig:frontier}
+\end{figure}
+
+\section{A per-input ceiling, and when it binds}\label{sec:ceiling}
+\begin{theorem}[Per-example Le Cam-type bound]\label{thm:ceiling}
+Let $G_x=\bar P_{\ne y(x)}$. For any decoder with aggregate accuracy $\pi$,
+$\mathrm{acc}(x)\le \TV(Q(\cdot|x),G_x)+(1-\pi)/(1-P(y(x)))
+\le \sqrt{(\ln 2)\rho(x)/2}+P(y(x))+(1-\pi)/(1-P(y(x)))$.
+\end{theorem}
+\begin{proof}
+With $A=\{z:f(z)=y(x)\}$, $\mathrm{acc}(x)=Q(A)\le G_x(A)+\TV(Q,G_x)$, and every conflicting-class
+input coded into $A$ is an error, so $G_x(A)\le(1-\pi)/(1-P(y(x)))$. Pinsker and
+$\TV(\bar P,G_x)\le P(y(x))$ give the second line. This is the standard two-point/Le Cam step
+\citep{raginsky2011,hellstrom2021}, stated here for a single input of a coded classifier.
+\end{proof}
+The bound is informative when an input's code is \emph{not} distinguishable from the
+conflicting-label mixture. Measured on random channels it is vacuous ($\ge1$) on $244/266$
+inputs, while the exact frontier of Section~\ref{sec:frontier} is vacuous on $202/266$; the
+frontier is the right object and Theorem~\ref{thm:ceiling} is its cheap surrogate.
+
+\section{Experiments}\label{sec:exp}
+\subsection{Exactness of the frontier}
+\paragraph{Enumeration.} All $2^{18}$ decoders of the blindness family were enumerated.
+Table~\ref{tab:frontier} reproduces $t^\star=\min_k p_k$ exactly, confirms that all four codes
+share $I(X;Z)=3.0850$, $I(Y;Z)=0.5000$, $I(Z;C)=0.3113$ and $\pi=\pi_{\max}=0.7500$, and shows
+the LP over-statement of Proposition~\ref{prop:gap}. In the concentrated instance every
+individual ceiling is $1.000$ while $t^\star=0$, i.e.\ congestion (Proposition~\ref{prop:congest})
+is realised, not merely asserted.
+
+\begin{table}[t]\centering\small
+\caption{Achievable-knowledge frontier, computed exactly by enumeration and by LP relaxation.
+The first four columns are identical across rows by Theorem~\ref{thm:blind}.}
+\label{tab:frontier}
+\begin{tabular}{lccccccc}
+\toprule
+profile $p$ & $I(X;Z)$ & $I(Y;Z)$ & $I(Z;C)$ & $\pi=\pi_{\max}$ & $t^\star$ exact & $t^\star$ LP & ceilings \\
+\midrule
+$(1,1,1,0,0,0)$ & 3.0850 & 0.5000 & 0.3113 & 0.7500 & 0.000 & 0.500 & all $1.000$\\
+$(0.5,\dots,0.5)$ & 3.0850 & 0.5000 & 0.3113 & 0.7500 & 0.500 & 0.750 & all $1.000$\\
+$(0.6,0.6,0.6,0.4,0.4,0.4)$ & 3.0850 & 0.5000 & 0.3113 & 0.7500 & 0.400 & 0.700 & all $1.000$\\
+$(0.75,0.75,0.75,0.25,0.25,0.25)$ & 3.0850 & 0.5000 & 0.3113 & 0.7500 & 0.250 & 0.625 & all $1.000$\\
+\bottomrule
+\end{tabular}
+\end{table}
+
+\paragraph{Validity and relaxation gap.} On 60 additional random channels ($n\le6$, $K\le3$,
+$m\le4$, exhaustive enumeration) the exact ceiling dominated the deployed accuracy for all $266$
+inputs (zero violations), the LP relaxation gap had median $0.0000$ and maximum $0.4189$, and the
+TV bound of Theorem~\ref{thm:ceiling} was vacuous on $244/266$ inputs versus $202/266$ for the
+exact frontier.
+
+\paragraph{Identities and the ceiling on random and Gaussian channels.} Lemma~\ref{lem:chain} and
+Corollary~\ref{cor:correct} were checked to machine precision on 120 random discrete channels
+(max pointwise error $3.6\cdot10^{-15}$ and $2.9\cdot10^{-15}$; expectation-level identity
+$5.1\cdot10^{-16}$; no negative idiosyncratic term) and on 12 Gaussian encoders discretised to
+exact grid channels ($7.1\cdot10^{-15}$, $7.2\cdot10^{-15}$, $6.7\cdot10^{-16}$). The
+Theorem~\ref{thm:ceiling} inequalities held for all $1009$ inputs of the discrete family and all
+Gaussian-grid inputs. The disclosure that belongs with that sentence is that the bound is strictly
+below $1$ on only $44$ of those $1009$ inputs, so the other $965$ confirm an inequality that the cap
+at $1$ already gives; where the bound does bite, on a trained code, is Section~\ref{sec:link}. Median Spearman agreement between the optimised prior-KL and the exact
+local rate over the Gaussian encoders was $0.543$ (range $-0.257$ to $0.943$); we report this as
+a unit-dependent comparison, not as a rate theorem, because $i(x,\mu(x))$ is a density ratio.
+
+\subsection{The gap is granularity, not geometry}\label{sec:granularity}
+Propositions~\ref{prop:gran} and \ref{prop:atomless} say what the relaxation of
+Proposition~\ref{prop:gap} is made of. Both halves are tested here, and the answer is that the gap
+is a property of the alphabet, not of the guarantee.
+
+\paragraph{Refining the alphabet buys the relaxation.}
+Proposition~\ref{prop:gran} was checked on $16$ finite codes over the ladder
+$L=1,2,\dots,32$ (\texttt{code2/atomless\_gap.py}, Table~\ref{tab:granularity}). The LP value was
+invariant under refinement in every case, to within $10^{-9}$, and the relaxation gap never
+exceeded $1/L$: across all $84$ computed code-by-level cells the largest product
+$\mathrm{gap}\cdot L$ is $0.500$, attained at the coarsest rung by the two-input instance whose
+inputs share one atom, where the gap is exactly $1/(2L)$. At $L=1$ the gap ranges from $0.0000$ to
+$0.5000$ (the latter on \texttt{identical-pair}), and it is already below $0.0222$ by $L=8$. The rate side is
+just as sharp: refining to $L=32$ raises the alphabet entropy by $3.4657$ nats, which is $\ln 32$
+to within $1.3\times 10^{-15}$ nats, while the relative-entropy rate moves by at most $1.1\times 10^{-16}$ nats. So the same
+refinement that closes the integrality gap is free under the rate functional a VIB actually uses,
+and costs exactly $\ln L$ under the counting functional.
+
+\paragraph{On a continuous code the relaxation is exact.}
+For the Gaussian code the LP value and the best measurable decoder agree, and they agree for the
+reason Proposition~\ref{prop:atomless} gives: the partition built by splitting each cell in the
+proportions the LP itself chooses attains the LP up to the mesh. The residual shrinks with the
+mesh and not otherwise --- on the separated labelling it is $0.00583, 0.00291, 0.00145, 0.00073$ for $501,1001,2001,4001$
+cells, halving at every doubling, while the LP is stable to $3.5\times 10^{-5}$ across those resolutions;
+on the split labelling the same sequence is $0.00796, 0.00399, 0.00200, 0.00100$. The accuracies of those partitions are
+integrated on the sub-intervals with the Gaussian CDF, so no quadrature enters the claim.
+
+\paragraph{The pair bound is tight for location families and can be strict otherwise.}
+Two inputs give $t^\star=\tfrac12(1+\mathrm{TV})$ exactly, as Corollary~\ref{cor:pairtight}
+predicts for a symmetric location family: at separations $\Delta=0.5, 1.0, 2.0, 4.0$ the LP returns $0.5987, 0.6915, 0.8413, 0.9772$
+against the bounds $0.5987, 0.6915, 0.8413, 0.9772$ themselves, and the explicit partition is within $0.0012$ of it.
+Break the symmetry by changing the variance instead of the mean and the bound stops being tight:
+the same pair of means with unit and doubled variance leaves a slack of $0.0171$, with variance $4$
+a slack of $0.0248$, and even the near-degenerate $(1,1.05)$ pair is strict by $0.0013$. It is the
+symmetry, not the nonatomicity, that makes the two-point bound an equality.
+
+\paragraph{Blindness without a lattice.}
+Theorem~\ref{thm:blind} matches every average functional on a discretised family. On a continuous
+code the two \emph{rate-side} functionals are label-blind by construction, and that alone is
+enough to move the guarantee: the mean set $(-2,-1,1,2)$ with three different labellings has
+$I(X;Z)=$~0.5874 nats and $R=$~1.2500 in all three cases, to the last digit, while the optimal
+per-input guarantee is 0.8406, 0.6875, 0.6183 (Table~\ref{tab:gausslab}). The classification term does see the
+labelling --- $I(Y;Z)$ is 0.4760, 0.1026, 0.0606 nats and $\pi_{\max}$ is 0.9093, 0.6886, 0.6267 --- so this is blindness of
+the \emph{rate}, not of every average: the full statement, in which $I(Y;Z)$ and $\pi_{\max}$ are
+also held fixed, is the finite-family Theorem~\ref{thm:blind}, and the distance between the two is
+reported rather than papered over. The pair bound of Lemma~\ref{lem:pair} is attained by the
+separated labelling and strict for the split one ($0.6915$ against $0.6193$), so with
+three or more inputs the least cross-label TV is only a ceiling.
+
+\paragraph{What this says about the lattices in this paper.}
+Corollary~\ref{cor:conservative} is checked rather than assumed. Rounding the same Gaussian code to
+steps $\delta=0.25, 0.50, 1.00, 2.00$ leaves the lattice LP below the continuous guarantee in $12$ of
+$12$ code-by-step cells; for the separated labelling the margins, listed at the steps above
+so that they grow with the coarseness, are $0.0019, 0.0076, 0.0288, 0.1031$, to a maximum of $0.1031$. The slack is the
+mass a
+coarse cell mixes across a boundary, so it shrinks with the step, and the reading of every ladder in
+Section~\ref{sec:rate} is conservative: a code whose lattice guarantee has collapsed to $0$ may still
+know more in the continuum, while a code whose lattice guarantee is $t$ is \emph{already} guaranteed
+$t$ on the undiscretised latent, because a decoder of the snapped code composes to one of the code
+itself.
+
+\paragraph{How many cells the exact channel occupies.}
+The ladders estimate $Q(z\mid x)$ from $12$ draws per input, so it is fair to ask what the snapped
+channel would occupy if it were probed harder. With $400$ draws for each of $60$ test inputs of the
+same FashionMNIST encoder (\texttt{code2/lattice\_neff.py}), at $\beta=10^{-2}$ the snapped channel is
+still fully spread at $\delta=4.5\hat\sigma$ ($297.9$ distinct cells per input on average, effective
+support $240.3$), has begun to merge at $\delta=6.5\hat\sigma$ ($39.1$ cells, effective support $5.1$,
+largest cell holding $0.729$ of an input's mass), and is down to one cell at $\delta=9\hat\sigma$. At
+$\beta=10^{-1}$ the same transition is shifted to $\delta=13\hat\sigma$ (effective support $1.3$,
+against $25.4$ at $9\hat\sigma$), which is the mean-spread calibration caveat put in numbers. So the
+ladder's $12$-atom table is a \emph{sub-code} of what the channel occupies at fine steps: the fine end
+of a staircase is a statement about distinguishability at that sample size, not about the whole
+continuum. The coarse end does not depend on the sample size, because there the effective support of
+the channel itself collapses to one.
+
+\paragraph{The staircase is not an artefact of the twelve-code table.}
+Same encoder, same test inputs, same lattice steps, but the channel table built from $100$ draws per
+input instead of $12$ (\texttt{code2/frontier\_bigL.py}; its sparse LP is checked against the dense
+programme the published ladders use and against exhaustive enumeration on $20$ small channels before
+anything is reported). Over the $8$ steps, $\beta=10^{-2}$ gives $t^\star_{\rm LP}=$~1.000, 1.000, 1.000, 1.000, 0.750, 0.000, 0.000, 0.000 at
+$L=12$ and~1.000, 1.000, 1.000, 1.000, 0.610, 0.020, 0.000, 0.000 at $L=100$; $\beta=10^{-1}$ gives $t^\star_{\rm LP}=$~1.000, 1.000, 1.000, 1.000, 1.000, 0.833, 0.250, 0.000 and~1.000, 1.000, 1.000, 1.000, 1.000, 0.830, 0.190, 0.000. The drop from
+perfect feasibility occurs at the same rung under both estimates, the largest disagreement over all
+levels is $0.140$ and the signed differences run from $-0.140$ to $0.020$. At the fine end the
+alphabet simply grows (480 and 4000 cells for $L=12$ and $L=100$) while the guarantee stays exactly $1$,
+so the privacy of the fine cells is not a finite-sample illusion; the floor moves with the estimate as
+well ($0.925 against 0.854$ at $\delta=4.5\hat\sigma$). The honest reading is that estimating the channel better
+changes the ladder's numbers by tenths, not its shape.
+
+\begin{table}[t]\centering\small
+\caption{Refining every atom into $L$ sub-atoms (Proposition~\ref{prop:gran}): the LP value is
+fixed and the deterministic guarantee climbs to it. Entries are $t^\star(Q^{(L)})$; -- marks a
+level whose composition search exceeded the $6\times10^{5}$-point budget.}
+\label{tab:granularity}
+\begin{tabular}{lccccccc}
+\toprule
+code & $t^\star_{\rm LP}$ & $L=1$ & $L=2$ & $L=4$ & $L=8$ & $L=16$ & $L=32$ \\
+\midrule
+identical-pair ($n=2,m=2$) & 0.500 & 0.000 & 0.500 & 0.500 & 0.500 & 0.500 & 0.500 \\
+balanced-triple ($n=3,m=3$) & 0.500 & 0.333 & 0.500 & 0.500 & 0.500 & 0.500 & 0.500 \\
+half-shared ($n=3,m=3$) & 0.500 & 0.500 & 0.500 & 0.500 & 0.500 & -- & -- \\
+random-2 ($n=4,m=4$) & 0.505 & 0.240 & 0.500 & 0.500 & 0.500 & 0.500 & -- \\
+random-13 ($n=5,m=3$) & 0.596 & 0.341 & 0.548 & 0.559 & 0.575 & 0.587 & 0.591 \\
+\bottomrule
+\end{tabular}
+\end{table}
+\begin{table}[t]\centering\small
+\caption{One Gaussian code, three labellings (Proposition~\ref{prop:atomless}). The mean set
+$(-2,-1,1,2)$ determines $I(X;Z)$ and the rate $R$; only the labelling changes, and with it the
+per-input guarantee. \emph{Partition} is the guarantee of the explicit measurable decoder built
+from the LP solution, its accuracy integrated on the sub-intervals.}
+\label{tab:gausslab}
+\begin{tabular}{lccccccccc}
+\toprule
+labelling & $I(X;Z)$ & $R$ & $I(Y;Z)$ & $\pi_{\max}$ & $\min_k\mathrm{TV}_k$ & $\tfrac12(1+\mathrm{TV})$ & $t^\star_{\rm LP}$ & partition \\
+\midrule
+separated & 0.5874 & 1.2500 & 0.4760 & 0.9093 & 0.6827 & 0.8413 & 0.8413 & 0.8406 \\
+interleaved & 0.5874 & 1.2500 & 0.1026 & 0.6886 & 0.3829 & 0.6915 & 0.6885 & 0.6875 \\
+split & 0.5874 & 1.2500 & 0.0606 & 0.6267 & 0.3829 & 0.6915 & 0.6193 & 0.6183 \\
+\bottomrule
+\end{tabular}
+\end{table}
+
+\subsection{Dissociation on trained VIBs}\label{sec:dissociation}
+\paragraph{Protocol.} FashionMNIST and MNIST, encoder $784\to256\to256\to32$ with a linear head,
+$\beta\in\{0,10^{-2},10^{-1}\}$, symmetric label noise $\{0,20\%,40\%\}$, 2 seeds
+(\texttt{s0}, \texttt{s1}), log-variance
+clamped to $[-4,3]$ so that $\beta=0$ remains a well-defined channel, aggregate-posterior pool of
+$8000$ training inputs ($2000$ and $20000$ for sensitivity), $4000$ test and $4000$ OOD inputs,
+paired bootstrap with $400$ resamples for every score difference. Scores: max-softmax, energy,
+logit adjustment, balanced softmax, decoded-class typicality, aggregate-posterior typicality,
+raw deployed density, and the certificate of Corollary~\ref{cor:correct}. No score uses a
+trained head or a test label.
+
+\begin{figure}[t]
+\centering
+\includegraphics[width=\textwidth]{figs/fig_dissoc.pdf}
+\caption{Dissociation between the two terms of Lemma~\ref{lem:chain} on trained VIBs: AUC for
+separating correct from wrong test predictions, as a function of $\beta$ and label noise. Raw
+deployed density $i(x,\mu(x))$ (dotted) is worse than chance, the certificate
+$i-e_{\hat y}$ (solid) is competitive with or better than max-softmax (grey), for
+FashionMNIST (left column of each panel pair) and MNIST.}
+\label{fig:dissoc}
+\end{figure}
+
+\begin{figure}[t]
+\centering
+\includegraphics[width=\textwidth]{figs/fig_rc.pdf}
+\caption{Risk--coverage curves for all label-free scores on one trained VIB. No head is
+trained and no test label enters any score.}
+\label{fig:rc}
+\end{figure}
+
+\paragraph{Main finding.} \begin{table}[t]\centering\footnotesize
+\setlength{\tabcolsep}{3.5pt}
+\resizebox{\textwidth}{!}{\input{tabs/lrr.tex}}
+\caption{All 18 cells (2 datasets $\times$ 3 label-noise levels $\times$ 3 $\beta$), each
+averaged over 2 seeds: 36 trained models, score dumps in results2/scores\_*.npz.
+``cert'' is the certificate of Corollary~\ref{cor:correct}, ``dens'' the raw deployed density
+$i(x,\mu(x))$, ``LA'' logit adjustment. Paired-bootstrap 95\% intervals are over test inputs and
+are averaged across seeds; positive $\Delta$AUC means the certificate separates correct from
+wrong predictions better. No score uses a trained head or a test label.}
+\label{tab:lrr}
+\end{table}
+
+\paragraph{Main finding: the subtraction is the information.} Table~\ref{tab:lrr} reports the
+dissociation that Lemma~\ref{lem:chain} predicts. The raw deployed density is \emph{worse than
+chance} at separating correct from incorrect predictions in every run: below chance in every one of the 36 models (per-model AUC
+$0.042$--$0.481$ over the 36 trained models, and $0.042$--$0.352$ over the 24 stochastic ones;
+seed-averaged cell means span $0.046$--$0.347$ over the
+12 stochastic cells (strongest FashionMNIST at $\beta=10^{-2}$, weakest MNIST at
+$\beta=10^{-1}$)), while the certificate --- the density minus the input-idiosyncratic part --- is
+the best label-free score on the hard task: AUC $0.894$ and AURC $0.0259$ on FashionMNIST at
+$\beta=10^{-2}$ against $0.884$/$0.0280$ for max-softmax and $0.844$/$0.0366$ for logit
+adjustment. This is what the identity says to expect: the bits that make a code specific to an
+input contribute nothing to correctness evidence, and they are large enough to invert the
+ordering of the raw density.
+
+\paragraph{Dose--response and scope.} The certificate's margin over max-softmax grows with the
+scarcity of correctness information, as predicted: on FashionMNIST at $\beta=10^{-2}$,
+$\Delta$AUC $=+0.0106$ ($+0.003,+0.018$) with clean labels, $+0.0342$ ($+0.023,+0.046$) with
+$20\%$ symmetric noise and $+0.0543$ ($+0.041,+0.069$) with $40\%$, and the corresponding
+$\Delta$AURC are $-0.0022$, $-0.0066$, $-0.0121$ (all intervals excluding zero). Against logit
+adjustment the same rows give $+0.0507$, $+0.0722$, $+0.0874$: prior correction alone is not enough (it is between the raw density and the certificate in every column),
+because it reweights the label posterior without ever reading the code's typicality. On MNIST, where
+correctness evidence is far less scarce, the certificate does not dominate: across the six
+stochastic cells it beats max-softmax in two ($+0.0139$, $+0.0110$ at $\beta=10^{-1}$ with noise),
+ties in two ($+0.0017$ $(-0.007,+0.011)$ and $+0.0007$ $(-0.004,+0.005)$, clean labels), and is
+significantly worse in two ($-0.0260$ $(-0.050,-0.004)$ and $-0.0246$ $(-0.047,-0.005)$ at
+$\beta=10^{-2}$ with $20\%$/$40\%$ noise). We report that rather than averaging it away: the
+certificate is a gain where correctness evidence is scarce relative to the code's per-input
+spread, and a tie or a loss where it is not. It is not a universal improvement over confidence,
+and on the easy task the theory gives no reason it should be --- the aggregate term it removes is
+what the classifier actually uses there. \emph{Scope condition:} at $\beta=0$ the encoder is
+effectively deterministic, the mixture estimates are dominated by the variance clamp, and the
+certificate is much worse than confidence in all six deterministic cells ($\Delta$AUC
+$-0.136$ to $-0.282$, every interval excluding zero; per-model certificate AUC only $0.613$--$0.704$). The
+score needs a genuine channel; this is a property of the estimator, not of the identity, and we
+report it rather than hiding it.
+
+\paragraph{Sensitivity of the estimator.} The certificate's AUC is stable in the aggregate-posterior
+pool (seed 0, clean labels, pool $2000$ vs $20000$): $0.8937\to0.9027$ on FashionMNIST at
+$\beta=10^{-2}$, $0.8928\to0.8960$ at $\beta=10^{-1}$, $0.9471\to0.9574$ on MNIST at
+$\beta=10^{-2}$. The effect is not monotone --- MNIST at $\beta=10^{-1}$ goes the other way,
+$0.9646\to0.9593$ --- so we claim only that the tenfold pool change moves AUC by at most $0.011$
+and never reverses a conclusion, not that more pool helps.
+
+\paragraph{Which score wins where.} Ranking the eight label-free scores by AUC cell by cell
+(Table~\ref{tab:lrr}) is more informative than the averages, and we report the ranking honestly:
+the certificate is the top score in 6 of the 6
+stochastic FashionMNIST cells, but on MNIST it is beaten in 5 of
+6 cells by \emph{decoded-class typicality} --- the score that conditions on the class
+but keeps the input-idiosyncratic bits --- by margins up to $0.0460$ AUC ($0.9443$ vs $0.8983$ at
+$\beta=10^{-2}$ with $20\%$ noise). At $\beta=0$ max-softmax wins all 6 deterministic cells.
+The pattern is a scope statement, not a footnote: removing the input-idiosyncratic part pays
+exactly when those bits are large relative to the correctness evidence, which is what a scarce,
+high-capacity channel produces (FashionMNIST, 10 classes compressed to 32 latent dimensions) and
+what an easy, near-saturated channel does not (MNIST, where class typicality alone already
+separates right from wrong). Any claim that the certificate is universally the best label-free
+score would be false on our own data, and we do not make it.
+
+\paragraph{Interpretation.} The ordering across scores is consistent and it is not a
+calibration artefact: temperature-style corrections (logit adjustment, balanced softmax) move the
+label posterior but leave the code's typicality unread, and they sit between the raw density and
+the certificate. Figure~\ref{fig:dissoc} shows the two curves separating as $\beta$ grows, and
+Figure~\ref{fig:rc} the risk--coverage curves themselves. What the certificate is \emph{of} is
+taken up in Section~\ref{sec:link}, where it is compared against the exact per-input ceiling of
+Section~\ref{sec:ceiling}.
+
+\subsection{The guarantee is not on a tradeoff curve, and group guarantees miss it}
+\label{sec:groups}
+Two checks on the frontier, both computed by exhaustive enumeration of the $2^{18}$ decoders.
+
+\emph{Independence from the aggregate requirement.} Sweeping $\pi_0$ over
+$\{0,0.2,0.4,0.5,0.6,\pi_{\max}\}$ leaves $t^\star$ exactly constant for every profile:
+$t^\star(\pi_0)=\min_k p_k\in\{0.000,0.500,0.400,0.250,0.000\}$ for the concentrated, uniform,
+mild, split and all-or-nothing profiles, at every $\pi_0$ (results2/verify\_frontier\_extra.log).
+The obstruction is per pair, not aggregate: whichever label a shared code takes, one of the two
+inputs that produce it is left at accuracy $p_k$. So there is no accuracy--fairness tradeoff curve
+for an average-rate theorist to trace: the input-level guarantee is simply not purchasable with
+aggregate accuracy.
+
+\emph{Group floors are not input floors.} Optimising the worst \emph{class} accuracy over
+deterministic decoders of the same codes, subject to $\pi\ge\pi_{\max}$, gives $0.667$, $0.750$,
+$0.733$, $0.750$, $0.667$ for the five profiles, while the corresponding per-input guarantees are
+$0.000$, $0.500$, $0.400$, $0.250$, $0.000$. In the concentrated instance a decoder can hold a
+two-thirds worst-class floor and nevertheless be wrong with certainty on a quarter of the inputs (the unserved member of each $p_k=0$ pair).
+This is the precise sense in which reweighting, group-DRO
+\citep{sagawa2020} or any class-level fairness constraint cannot substitute for the feasible set
+of Section~\ref{sec:frontier}: they bound averages over groups, and the failure mode here lives
+inside a group.
+
+\subsection{Where a real code stops being jointly feasible}
+\label{sec:rate}
+The instance of Section~\ref{sec:realfrontier} used the code's own rate, so $t^\star=1$ is almost
+tautological. To locate the congestion transition we sweep the lattice that discretises the
+stochastic channel from fine to coarse ($\delta/\hat\sigma$ from $0.5$ to $13$, $160$ inputs,
+$16$ sampled codes each) and solve the frontier at each rate, constraining the aggregate accuracy
+at the \emph{channel's} Bayes value $\pi_{\rm chan}$ (the mean-decode accuracy is not attainable
+on the sampled channel, which is itself an instance of the training/inference mismatch).
+Table~\ref{tab:rate} and Figure~\ref{fig:rate} give the result: at $\beta=10^{-2}$, $t^\star=1.000$ for $\delta/\hat\sigma\in\{0.5,1,2\}$, then $0.969$ at
+$3.0$, $0.250$ at $4.5$ and $0.000$ from $6.5$ onward; at $\beta=10^{-1}$ the guarantee stays at
+$1.000$ through $4.5$, is $0.625$ at $6.5$ and $0.000$ at $9.0$ and beyond. Over the same ladders
+the deployed mean-decode accuracy is flat by construction ($0.869$ and $0.888$), the code's own
+Bayes accuracy decays smoothly ($1.000\to0.851\to0.283\to0.131$ at $\beta=10^{-2}$;
+$1.000\to0.923\to0.397\to0.149$ at $\beta=10^{-1}$), and on the $12$ inputs whose individual
+ceiling is tractable the mean ceiling falls from $0.870$ to $0.224$ while the fraction with
+ceiling below $1$ rises from $0.833$ to $1.000$ (the two coarsest rows, solved on a re-drawn
+subsample, give $0.33$--$0.35$ and $0.667$: the same picture within subsample noise). The
+collapse coincides with the point where the occupied-cell count drops below the number of channel
+realisations, $160\times16=2560$: $1928$ cells at $\beta=10^{-2}$ and $2274$ at $\beta=10^{-1}$.
+Two readings, both intended. First, the transition of $t^\star$ is a step while every average
+quantity in the same figure is smooth, so an average-rate account cannot predict where individual
+feasibility is lost --- the mechanism is cell sharing across labels, not the numerical value of
+the lattice step. Second, at the fine end the discretised channel has $\pi_{\rm chan}=1$: each
+input keeps a cell to itself, which is the memorisation regime of Lemma~\ref{lem:chain} (high
+local rate, no shared typicality), while the deployed decoder reaches only $0.869$/$0.888$.
+There $t^\star=1$ is a statement about the code's resolution, not about the classifier's
+competence --- and the gap between $\pi_{\rm chan}=1$ and the deployed accuracy is itself the
+evidence that the readout, not the channel, is what binds.
+\begin{table}[t]\centering\footnotesize
+\setlength{\tabcolsep}{3pt}
+\caption{Rate--congestion sweep of a trained VIB code (FashionMNIST). $\pi_{\rm chan}$ is the
+Bayes accuracy of the discretised channel and the LP's aggregate constraint; ``ceiling'' rows are
+mean per-input ceiling / fraction of inputs whose ceiling is below $1$, solved where the LP is
+tractable.}
+\label{tab:rate}
+\input{tabs/rate.tex}
+\end{table}
+
+\begin{figure}[t]
+\centering
+\includegraphics[width=\textwidth]{figs/fig_rate.pdf}
+\caption{Left: the uniform per-input guarantee $t^\star$ as a function of rate for all six rate
+ladders of Section~\ref{sec:rate} --- three trained codes (two FashionMNIST seeds, MNIST)
+at two $\beta$ each. Right: the same six ladders drawn as $t^\star$ against the
+channel's own Bayes accuracy $\pi_{\rm chan}$, i.e.\ in the plane an average-rate theory lives
+in: one curve is a smooth marginal, the other is a staircase. The per-input ceiling curves are in
+Table~\ref{tab:rate}, where that LP is tractable. The two panels are the paper's thesis in one
+picture: the guarantee is a property of the overlap geometry, and it changes where the average
+curves are
+still flat.}
+\label{fig:rate}
+\end{figure}
+
+\paragraph{Replication on two more trained codes.}
+One code is an anecdote, so the identical ladder was rerun on a second FashionMNIST seed and on
+MNIST (Table~\ref{tab:ratemulti}; all six curves in the left panel of Figure~\ref{fig:rate}).
+In every ladder the guarantee starts at $1.000$ and ends at $0.000$, it never increases as the
+lattice is coarsened, the last step at which it is still $1$ lies in $[2.0,3.0]$ and the first
+step at which it is $0$ lies in $[6.5,9.0]$. What varies across replications is the
+\emph{location} of the transition and the value at which it passes through:
+$0.188$ on FashionMNIST
+seed 1 at $\delta/\hat\sigma=4.5$ versus $0.438$
+for MNIST at the same step, while the deployed accuracies of the six ladders are flat by
+construction and MNIST's is 0.9875 --- an easy,
+near-saturated task whose average quantities look nothing like FashionMNIST's. Three readings.
+(i) Congestion replicates: it is a property of the discretised channel's overlap geometry, not of
+one lucky training run. (ii) An average-rate account can neither predict where the transition
+sits nor rule out that the guarantee survives to zero rate, because on these ladders
+$\pi_{\rm chan}$ decays smoothly and monotonically while $t^\star$ is a staircase.
+(iii) What the theorem does and does not buy. A Markov-kernel coarsening $Q\mapsto Q\Lambda$ is monotone for the LP guarantee at any
+fixed floor (Proposition~\ref{prop:coarsen}(a)), but the ladder operation --- re-snap the same
+samples to a coarser lattice --- is \emph{not} such a coarsening when the lattices do not nest:
+a fine cell straddling a coarse boundary splits its mass in proportions that depend on where
+inside the cell each sample fell, which the fine channel has already forgotten. No $\Lambda$
+reproduces the coarse channel, the proposition does not apply, and monotonicity along the
+ladder is a property of these codes rather than an instance of (a). The ladders above use each level's own $\pi_{\rm chan}$ as the floor, which itself moves,
+so their monotonicity is \emph{not} an instance of the theorem and remains an observed fact
+(six of six; across the $42$ consecutive level pairs of the six ladders the guarantee rises in
+$0$ of them, so the observation is not one lucky endpoint). To separate the two we reran the ladder on a nested chain of odd step ratios
+$1{:}3{:}9{:}27$ with the floor held fixed at $\pi_0\in\{0,0.5,0.8\}$. The lattice geometry predicts exactly what happens, and it is now a lemma
+(Lemma~\ref{lem:oddstep}): odd ratios keep coarse boundaries on fine boundaries, and merging
+the fine channel reproduces the independently built coarse channel to
+$6e-17$ maximum absolute error in $6$ comparisons, while even
+ratios put a coarse boundary through the middle of a fine cell --- up to
+$1440$ fine cells straddle, with error reaching
+$0.50$ --- in $6$ comparisons. On the nested
+chain, monotonicity holds in $6$ of $6$ fixed-floor ladders, as the proposition
+requires; the even-ratio chain is the stochastic-kernel regime, and by Proposition~\ref{prop:coarsen}(c) that is precisely where a guarantee is allowed to rise. That permission is not a technicality: the lattice re-snap actually reverses. On minimal channels built by the same rounding from sampled codes --- $1165$ instances, $26916$ (pair, floor) points scored at a fixed floor by exhaustive enumeration of every deterministic decoder -- re-snapping raises the deterministic guarantee in $1927$ points, $0.079$ of the $24336$ with a non-trivial fine guarantee (largest gain $0.875$), and raises the LP guarantee in $2225$ points. The control is the same instances' genuine kernel coarsening, the lumped channel $Q\Lambda$: $0$ rises in the LP and $0$ in the deterministic guarantee over all $26916$ points, which is what (a) and (b) require and what validates the enumeration. The lattice geometry decides which pairs can reverse at all: every eligible pair at the step ratio $3$ was a lumping (1165 pairs, none straddling), so those are covered by the proposition and are not testable violations, while the straddling ratios $1.5$, $2$, $2.5$, $4$ carry all $1927$ reversals. Downward is still the norm: the mean change is negative at every straddling ratio (from $-0.15$ to $-0.37$), so what is refuted is the theorem, not the average behaviour. On the trained code the question cannot be posed this way: every lattice coarse enough to enumerate was already fully congested, with $0$ of $80$ points leaving a non-trivial deterministic guarantee, so $42$ of $42$ monotone ladder pairs remain an observation about trained codes and no more (\texttt{code2/lattice\_reversal\_search.py}, \texttt{code2/coarsen\_reversal\_real.py}).
+
+\begin{table}[t]\centering\footnotesize
+\setlength{\tabcolsep}{3pt}
+\caption{Rate--congestion ladders on three trained VIB codes (the two FashionMNIST seeds and
+MNIST), LP guarantee $t^\star$ at each lattice step $\delta/\hat\sigma$. Within a ladder the
+deployed mean-decode accuracy is constant by construction; $\hat\sigma$ is the standard deviation
+of the encoder's mean outputs, so the steps are comparable across codes.}
+\label{tab:ratemulti}
+\resizebox{\textwidth}{!}{\input{tabs/rate_multi.tex}}
+\end{table}
+
+
+\paragraph{Can the closed form replace the programme?} Table~\ref{tab:tvbound} compares
+Lemma~\ref{lem:pair}'s bound with the LP on every level of three ladders. The bound holds with no
+exception (0 violations in 24
+comparisons), and where the code is nearly noiseless it is \emph{exact}: slack $<5\cdot10^{-4}$ in
+12 of 24 levels, including the first step down, where the least
+cross-label TV is 0.938 and the bound 0.969 equals the LP value 0.969 on both FashionMNIST seeds.
+It is the failure that matters. In the congested middle the bound is loose by up to
+0.562, and at $\delta/\hat\sigma\ge6.5$ the least cross-label TV is
+\emph{exactly} $0$ --- some pair of differently labelled inputs has disjoint support and is
+perfectly distinguishable --- while $t^\star=0$ in 9 levels. No pairwise quantity can
+certify or refute the guarantee once congestion sets in, because the obstruction is not a pair: it
+is that many inputs must share few codes at once. So the linear programme is not a computational
+convenience standing in for a simple formula; it is the right object, and the slack of
+Lemma~\ref{lem:pair} is itself a diagnostic --- large slack with small minimum TV says
+many-way sharing, small slack says the code's difficulty is pairwise.
+
+\begin{table}[t]\centering\footnotesize
+\setlength{\tabcolsep}{3pt}
+\caption{Pair bound (Lemma~\ref{lem:pair}) versus the LP guarantee on three trained codes at
+$\beta=10^{-2}$, per lattice step. ``TV'' is the least total variation between two differently
+labelled inputs' discretised latent distributions; ``bound'' is $\tfrac12(1+\mathrm{TV})$.}
+\label{tab:tvbound}
+\resizebox{\textwidth}{!}{\input{tabs/tvbound.tex}}
+\end{table}
+
+\paragraph{Replication beyond images.}
+The ladder is not an artefact of pixel data. The same construction --- sample codes, round them to a lattice, solve the frontier at each level with the channel's own Bayes accuracy as the floor --- was run on two tabular tasks with no image structure at all (4 ladders, Table~\ref{tab:nonimage}, \texttt{code2/frontier\_nonimage.py}): breast cancer ($30$ features, $2$ classes, $120$ inputs, deployed accuracy $0.967$) and wine ($13$ features, $3$ classes, $63$ inputs). The step is the same as on FashionMNIST: on breast cancer at $\beta=10^{-2}$ the guarantee runs $1.000, 0.969, 0.500, 0.313, 0.000$, reaching $0$ by $\times4.5$, and on wine at the same $\beta$ it runs $1.000, 1.000, 0.625, 0.500, 0.000$, reaching $0$ by $\times4.5$. Over those same levels the deployed accuracy is flat to three decimals and the channel's Bayes accuracy decays smoothly and monotonically, which is the paper's point restated on data with no pixels: an average-rate account sees a smooth curve where individual feasibility has already gone. What does not transfer is the deterministic side: enumeration costs $K^m$, so the exact guarantee is computable only at the degenerate end of these ladders (the 8 levels with $K^m\le2^{21}$, every one of them with so few cells that both the LP and the deterministic value are already $0$), and the integrality gap of Proposition~\ref{prop:gap} therefore remains a measured fact about small codes, not about these.
+
+\begin{table}[t]\centering\scriptsize
+\setlength{\tabcolsep}{3pt}
+\caption{Rate--congestion ladders on two tabular tasks (breast cancer and wine, scikit-learn arrivals, standardised features, $120$ and $63$ test inputs, $16$ sampled codes each). Columns $\times m$ are lattice steps in units of the encoder's own mean spread $\hat\sigma$, not accuracy values. Upper block: the LP guarantee $t^\star$ at each lattice step with the floor set to the channel's own Bayes accuracy, shown beside the deployed accuracy. Lower block: that floor itself, which decays smoothly while $t^\star$ steps.}
+\label{tab:nonimage}
+\resizebox{\textwidth}{!}{\input{tabs/nonimage.tex}}
+\end{table}
+
+\paragraph{Replication on a pretrained encoder.}
+The construction does not depend on the tiny MLPs the dissociation study uses. Freezing an
+ImageNet-pretrained ResNet-18 (11.7M parameters, never fine-tuned), training only
+a stochastic head to a 32-dimensional code, and rerunning the same ladder on 8 lattice steps
+(\texttt{code2/frontier\_pretrained.py}, the same LP that was validated against the dense programme
+and against exhaustive enumeration) reproduces the phenomenon: with the $12$-draw channel table the
+guarantee runs $1.000$, $1.000$, $1.000$, $1.000$, $0.417$, $0.000$, $0.000$, $0.000$ and with the $100$-draw table $1.000$, $1.000$, $1.000$, $0.983$, $0.200$, $0.000$, $0.000$, $0.000$ at $\beta=10^{-2}$, and
+$1.000$, $1.000$, $1.000$, $1.000$, $1.000$, $0.458$, $0.000$, $0.000$ against $1.000$, $1.000$, $1.000$, $1.000$, $0.990$, $0.420$, $0.000$, $0.000$ at $\beta=10^{-1}$, while the channel's own Bayes accuracy decays
+smoothly ($1.000$, $1.000$, $1.000$, $1.000$, $0.872$, $0.327$, $0.150$, $0.135$, $1.000$, $1.000$, $1.000$, $0.999$, $0.808$, $0.299$, $0.146$, $0.135$ for the two tables) and the deployed mean-decode accuracy is
+$0.800$, $0.825$. The step and the zero survive both tables: the guarantee
+first departs from $1$ at rung 5 ($\beta=10^{-2}$) and 6 ($\beta=10^{-1}$) on the
+$12$-draw table and at rung 4 and 5 on the $100$-draw table, and from rung 6
+respectively 7 it reads exactly $0$ in both. What
+does not survive is the three-decimal reading of the transition's \emph{height}: over four
+independently drawn tables at the first collapsed rung the estimate ranges
+$0.167--0.458$ against $0.150--0.230$, $0.417--0.500$ against $0.320--0.420$ --- the widest single-table spread is $0.292$ --- and neither table size is systematically
+optimistic, because the paired comparison over 24 (ladder, rung, seed) combinations puts the
+$12$-draw value higher 10 times, lower 10 times, and equal 4 times (mean gap
+$0.040$, worst pair $-0.063$). Rare shared cells are real but individually small, so a table
+can miss one and still hit another, and the ordering of the two sample sizes is not settled by this
+many draws. The consequence for the reading is that the ladder's \emph{shape} --- $1$ across several
+steps, then a drop, then $0$ while the average-rate curve glides --- is evidence, while the height of
+one step is a number with error bars of its own order. A retrained head on cached features reproduces
+every published $12$-draw column exactly (largest absolute difference $0.0$), and the widest
+$100$-draw table used here (20000 cells against $200$ inputs) solves in 1.4 s, so the earlier
+cell budget was a choice rather than a limit.
+
+\paragraph{Width and cell sharing.}
+The published ladders all live at $z=32$, and freezing a backbone leaves the width fixed. To
+separate width from backbone, the same $784\to256\to256$ network was trained end-to-end from scratch
+at $z\in\{32,128,256\}$ on FashionMNIST ($45{,}000$ images, six epochs, Adam at $10^{-3}$, seeds
+\texttt{s0} and \texttt{s1}) and the identical eight-rung ladder was solved at $L=12$ on $200$ test
+inputs (\texttt{code2/colab\_e2e.py}, whose sparse LP is checked against exhaustive enumeration at
+start-up). At $z=32$ the staircase is intact and seed-stable: both seeds read
+$1.000, 1.000, 1.000, 1.000, 0.250, 0.000, 0.000, 0.000$ at $\beta=10^{-2}$, and
+$1.000$ through rung $5$ then $0.583$ and $0.542$, then $0.000$, at $\beta=10^{-1}$ (deployed
+accuracies $0.865$, $0.880$, $0.810$, $0.825$). Width pushes the transition out of the sampled
+window: at $z=128$ the $\beta=10^{-2}$ ladder first drops at rung $7$ ($0.917$, $0.938$ per seed) and
+reaches $0$ at $\times13$, while the $\beta=10^{-1}$ ladder stays at $1.000$; at $z=256$ both ladders
+stay at $1.000$ at every rung (deployed $0.910$, $0.875$, $0.840$, $0.790$, $0.880$, $0.885$,
+$0.820$, $0.815$). The cell counts show why: at the coarsest rung $\times13$ the table occupies $1$
+and $41$--$48$ cells of $2400$ at $z=32$, $364$--$479$ and $2400$ at $z=128$, and all $2400$ at
+$z=256$, so at the widest code no rung shares a cell and $t^\star=1$ states only that the sampled
+draws are distinct, not that the guarantee is robust. The two readings separate: the single highest
+deployed accuracy, $0.910$, occurs at $z=128$, $\beta=10^{-2}$, where the guarantee has already
+fallen by rung $7$, and the widest code is not the most accurate ($0.815$--$0.885$). Two seeds agree
+on every first-drop rung ($5$ and $6$ at $z=32$; $7$ and none at $z=128$; none at $z=256$) and on
+the height at $z=32$, $\beta=10^{-2}$, but a shorter budget
+($20{,}000$ images, three epochs) moved that same drop one rung earlier, so the onset is not
+budget-invariant. Doubling the scored set to $400$ inputs ($\beta=10^{-2}$, seed \texttt{s0})
+leaves the ordering intact: $z=32$ still collapses at $\times4.5$ ($0.167$) and reads $0$ from
+$\times6.5$, $z=128$ first drops at $\times9$ ($0.833$) and reaches $0$ at $\times13$, and $z=256$
+keeps all $4800$ cells distinct, so the width effect is not an artefact of the $200$-input set. The
+remaining structural limits are the two-seed $\beta=10^{-1}$ ladders, which stay on the $12$-draw
+table, and the rung set itself, which is read back in absolute units below on a half-$\hat\sigma$
+grid extended to $\times20$. At
+$100$ draws, $\beta=10^{-2}$, both seeds move the $z=32$ drop one rung earlier (to $\times3$,
+$0.970$/$0.980$; $0.190$/$0.210$ at $\times4.5$), while $z=256$ keeps $20000$ and $19998$
+of $20000$ cells at $\times13$ ($t^\star=1.000$ and $0.990$), so neither the staircase nor the
+width effect is a $12$-draw artifact.
+
+A same-model check at $\beta=10^{-1}$, where both tables come from one trained code
+(\texttt{results2/colab\_e2e\_L12v100\_b01.json}), says which parts of that reading are sturdy. The
+two tables agree that the substantive drop is at rung $6$ ($0.583$ against $0.590$) and that
+$z=128$ and $z=256$ hold $1.000$ through all eight rungs with every sampled draw in a distinct cell
+at both table sizes ($2400$ and $20000$). They disagree about the approach: under $100$ draws
+the first departure moves one rung earlier ($0.993$ at rung $5$) and the first zero one rung later
+(rung $8$ against $7$). Agreement on the drop and on the wide codes, disagreement on the rungs
+between them --- the same shape-versus-height split the granularity study reports, now inside a
+single trained code.
+
+\paragraph{Fine-tuning a pretrained backbone.}
+The last untested case is the backbone itself. ImageNet ResNet-18 on FashionMNIST, $2000$ images,
+six epochs, $\beta=10^{-2}$, $z=32$, both seeds, scored on $200$ inputs at $L=12$
+(\texttt{code2/finetune\_r18.py}, which caches the frozen stem so the two conditions see identical
+activations): with the trunk frozen, the published setting, the ladders read $1.000$, $1.000$,
+$1.000$, $0.944$, $0.000$, $0.000$, $0.000$, $0.000$ and $1.000$, $1.000$, $1.000$, $0.944$, $0.167$,
+$0.000$, $0.000$, $0.000$ at deployed accuracy $0.825$ and $0.830$; with only the last residual
+block unfrozen they read $1.000$, $1.000$, $1.000$, $0.958$, $0.000$, $0.000$, $0.000$, $0.000$ and
+$1.000$, $1.000$, $1.000$, $0.944$, $0.083$, $0.000$, $0.000$, $0.000$ at $0.850$ and $0.880$. All
+four first leave $1$ at $\times3$, and within a pair the first $0$ sits at the same rung
+($\times4.5$ for \texttt{s0}, $\times6.5$ for \texttt{s1}), while $\hat\sigma$ moves by at most
+$0.004$ per pair. Fine-tuning buys accuracy ($+0.025$ and
+$+0.050$) and not guarantee: the staircase survives a real convolutional backbone and its partial
+unfreezing, and the one-rung seed scatter is there whether or not the backbone trains. At
+$\beta=10^{-1}$ the same pair (seed \texttt{s0}) reads $1.000$, $1.000$, $1.000$, $1.000$, $0.958$,
+$0.417$, $0.000$, $0.000$ frozen and $1.000$, $1.000$, $1.000$, $1.000$, $0.958$, $0.292$, $0.000$,
+$0.000$ tuned, at $0.825$ and $0.880$: the onset rung and the zero rung are shared, the
+intermediate height and $\hat\sigma$ ($0.568\to0.630$) are not. The second seed at the same $\beta$
+keeps the zero rung but not the onset: the tuned ladder first leaves $1$ at rung $5$ ($0.958$) where
+the frozen one holds until rung $6$ ($0.667$), at $0.840$ against $0.895$ accuracy: whether
+unfreezing moves the onset is seed-dependent at this $\beta$, while the zero rung is not.
+
+\paragraph{Width as a monotone congestion law.}
+Seven widths under one protocol (widths $16$, $32$, $64$, $96$, $128$, $192$ and $256$,
+$\beta=10^{-2}$, seed \texttt{s0}, $L=12$, $200$ inputs, stored in
+\texttt{colab\_e2e\_wsweep.json}) order themselves twice
+over: the first rung that leaves $1.000$ is $3,5,6,7,7,8$ and then none, the first rung that reaches
+$0$ is $5,6,7,8,8$ and then none, and the cells occupied at the coarsest rung $\times13$ are $1,1$,
+then $11,149,388,2249$ and $2400$ of $2400$ --- non-decreasing in $z$ without exception, while
+$\hat\sigma$ falls $1.198\to0.324$ across the same sweep. The same protocol on MNIST, six widths
+$32$--$256$ at the same seed and rungs, reproduces the sequence exactly: the onset rungs are
+$5,6,7,7,8$ and none, the zero rungs $6,7,8,8$ and none, and the cells at $\times13$ are
+$1,20,154,510,2316,2400$ against $1,11,149,388,2249,2400$ on FashionMNIST, so the ordering and the
+rung sequence are not a FashionMNIST artefact (\texttt{code2/mnist\_wsweep.py},
+\texttt{results2/colab\_e2e\_mnist\_wsweep.json}); the heights differ, as the session comparison
+below already warns. The same session's $z=32$ ladder reads
+$0.333$ at $\times4.5$ where the published one reads $0.250$, because that session's
+$\hat\sigma$ came out $0.862$ against $0.879$: same seed, different machine, identical onset,
+different height. Repeating the sweep at the second seed and at $\beta=10^{-1}$ keeps the ordering
+(\texttt{results2/colab\_e2e\_wsweep2.json}): at $\beta=10^{-2}$ the second seed reproduces the
+onset rungs $3,5,6,7,7,8$ and none exactly, and zeroes $z=16$ one rung earlier ($4,6,7,8,8$ against
+$5,6,7,8,8$); at $\beta=10^{-1}$ both seeds give onset rungs $4,6,7,8$ and none and zero rungs $6,7$
+and none, with occupancy at the coarsest rung non-decreasing in $z$ in all four runs. The wider
+codes never reach zero inside the grid at $\beta=10^{-1}$, and the seeds differ only in heights
+($0.924$ against $0.833$ at $z=16$, $0.583$ against $0.542$ at $z=32$). The rerun of \texttt{s0} even
+disagrees with the first session about the counts themselves --- $7,129,364$ against $11,149,388$ at
+$z=64,96,128$ --- while agreeing rung for rung on onset and zero. In
+absolute units the same sweep separates two readings. The cells occupied at $\times13$ fall $2400$,
+$2249$, $388$, $149$, $11$, $1$, $1$ as $13\hat\sigma$ rises $4.21\to15.58$, monotone without
+exception, so sharing follows the absolute step
+(\texttt{code2/width\_step\_law.py}). The onset does not stay put. In one session, on a half-$\hat\sigma$ grid extended to $\times20$ for
+the four widest codes, every width's bracket closes and the absolute onset rises with width:
+$[1.209,1.814]$,
+$[2.638,3.077]$, $[3.119,3.431]$, $[3.381,3.641]$, $[3.765,4.000]$, $[4.036,4.219]$,
+$[4.391,4.554]$ for $z=16,\dots,256$, so no fixed absolute capacity says where the guarantee breaks.
+Nor is the threshold fixed in the code's own units: the onset rung climbs from $1.5\hat\sigma$ to
+$14\hat\sigma$, ninefold, while the absolute step climbs only threefold ($1.5\to4.5$), so the
+shrinking of $\hat\sigma$ accounts for most of the rung growth and the rest is a real decrease in
+what a wider code tolerates relative to its own scale. The brackets are tight enough to test
+adjacency: one of the $21$ width pairs overlaps ($z=64$ against $z=96$), and the zero rungs of
+$z=128$ and $z=192$ are indistinguishable ($[5.883,6.118]$ against $[5.870,6.053]$). The widest
+code, whose bracket was open inside the eight-rung grid, collapses at $\times19.5$ with $453$ of
+$2400$ cells still distinct at $\times20$
+(\texttt{code2/absolute\_onset\_law.py}, reading \texttt{results2/colab\_e2e\_wsweep\_fine.json}
+and \texttt{colab\_e2e\_wsweep\_ext.json}).
+
+\subsection{Do the two halves measure the same object?}\label{sec:link}
+The frontier is about what a code \emph{can} be required to know; the certificate is scored
+against whether a prediction \emph{is} right. If the certificate estimates the ceiling, the two
+rankings should agree. We tested this on the discretised channel of a trained code, where
+$\rho(x)$, $\mathrm{ceil}(x)$ and $c(x)=\rho(x)-D(Q_x\|\bar P_{y(x)})$ are all exact functionals of
+the same matrix, so nothing is an estimator's artefact
+(\texttt{code2/ceiling\_link.py}, Table~\ref{tab:link}).
+
+Three answers, one of them negative. \emph{First}, the ceiling theorem holds: with the budget term
+taken at the aggregate accuracy the programme actually enforces ($\pi_{\rm chan}$, not the deployed
+accuracy), no input's LP ceiling exceeds the TV or Pinsker bound --- $0$ exceedances over $14$
+levels and $700$ input-level comparisons. (Using the deployed accuracy, which is larger than
+$\pi_{\rm chan}$ at coarse levels, produced two apparent violations: a bug in the check, not in the
+theorem, and a reminder that this bound's hypothesis is about the decoder's aggregate accuracy.) Its empirical force, however, is confined to the congested end. The bound tested above is $\min(1,\mathrm{TV}+\text{budget})$, and on $28$ of $28$ levels of Table~\ref{tab:link} and its MNIST counterpart it equals one for all $50$ sampled inputs ($1400$ comparisons in which a ceiling of at most $1$ says nothing). Re-solving the same functionals on the FashionMNIST code at lattices coarse enough to force cell sharing (\texttt{code2/link\_vacuity.py}, $4$ values of $\beta$, $160$ inputs, $\delta/\hat\sigma$ up to $13$, $24$ levels) makes it bite: uncapped, the bound is strictly below one for up to $0.86$ of the inputs, at $5$ occupied cells, being binding at $4$ of the $24$ levels --- and there the theorem is still never violated, $0$ exceedances in $1200$ input-level comparisons. The sweep reaches congestion only at the low-$\beta$ end: at the $1$ settings $\beta\in\{1$ the step $\delta/\hat\sigma$, calibrated to the spread of the encoder's means rather than of its samples, leaves all $6$ of their levels at $2560$ occupied cells, so no lattice coarse enough to merge them is in the table. The Pinsker relaxation binds nowhere: even its most binding level leaves $0.00$ of inputs below one, so on trained codes the total-variation form carries the content and the rate-based form is decorative. The same sweep bounds the second finding. At the collapsed levels, where the whole code has $1$ occupied cell and every input shares it, the certificate and the ceiling are uncorrelated ($c\!\sim\!\mathrm{ceil}$ takes the values $-0.08$), so the link is a statement about partially congested codes, not about degenerate ones. 
+\emph{Second}, the certificate does track the ceiling: Spearman $0.767$
+(95\% CI $[0.585,0.886]$) at the level where
+the ceiling varies most, and the interval excludes zero in $7$ of $7$
+varying levels --- while its rank agreement with \emph{correctness} at those same levels is
+$-0.14, -0.06, -0.04, 0.03, 0.03, 0.13, 0.14$. The certificate is closer to a statement about
+the code than about the trial. \emph{Third}, and this limits how much the first two points buy:
+the raw local rate tracks the ceiling just as well ($0.766$ at the same level),
+which is what the Pinsker form already says --- the ceiling is bounded by a monotone function of
+$\rho$. So the subtraction that makes the certificate useful for correctness buys nothing for
+ceiling ranking. We report the negative because it sharpens the claim: the certificate is an
+estimator of \emph{achievable} knowledge only in the trivial sense that the rate already is; its
+value is that the idiosyncratic part must be removed before the same number ranks
+\emph{correctness}. MNIST replicates the ceiling side (Table~\ref{tab:link_mnist}) and marks the limit of the test: at $0.01$ and $\times5.0$ the certificate tracks the ceiling with Spearman $0.776$ (CI $[0.609, 0.868]$), the interval being positive in $6$ of $7$ varying levels. But in $5$ of those $7$ levels the $50$ sampled inputs contain \emph{no} incorrect prediction at all (MNIST is near-saturated), so the correctness half of the comparison cannot be made there; at the $2$ levels with $\beta=10^{-1}$, where it can, the agreement with the ceiling is weaker ($0.113, 0.420$) and with correctness is $0.101, 0.108$. The replication therefore supports the ceiling link and is silent, rather than positive, about correctness on the easy task.   
+
+\begin{table}[t]\centering\footnotesize
+\setlength{\tabcolsep}{3.5pt}
+\caption{Certificate $c(x)$ versus the exact LP ceiling $\mathrm{ceil}(x)$ on a discretised
+FashionMNIST code ($\beta=10^{-2}$, $50$ inputs per level). ``sd'' is the spread of the ceiling:
+where it is $0$ the ceiling is constant (all inputs can, or cannot, be required to be known) and a
+rank correlation is meaningless, so those rows report n/a.}
+\label{tab:link}
+\input{tabs/link.tex}
+\end{table}
+
+\begin{table}[t]\centering\footnotesize
+\setlength{\tabcolsep}{3.5pt}
+\caption{The same certificate-versus-ceiling comparison on a MNIST code, $50$ inputs per level.
+The $n/a$ entries in the $c\!\sim\!\mathrm{correct}$ column at the levels where the ceiling varies are
+the point of the replication: every sampled input is correctly classified there, so there is no
+incorrect prediction to rank and the correctness half of the comparison is not testable.}
+\label{tab:link_mnist}
+\input{tabs/link_mnist.tex}
+\end{table}
+
+\subsection{The frontier of a real trained code}
+\label{sec:realfrontier}
+The frontier theorems assume a finite code, so we made a trained VIB's channel finite without
+leaving the model: draw $L=16$ codes per input from $q(\cdot|x)$, snap them to a lattice of step
+$\delta$, and take $Q(z|x)$ to be the empirical frequency of each occupied cell ($200$ inputs,
+$3200$ cells). This is the stochastic channel the encoder defines, not the deterministic mean
+decode. LP results (Table~\ref{tab:realfrontier}) say that at the code's operating rate
+$t^\star=1$: the discretised code \emph{can} be simultaneously correct about every input it is
+shown, and congestion appears only when the lattice is coarsened
+($t^\star=0.938$ at the coarsest lattice, $\delta=3.5\hat\sigma$).
+
+\begin{table}[t]\centering\small
+\caption{Achievable uniform guarantee $t^\star$ of a discretised real VIB code (FashionMNIST,
+$200$ inputs, $16$ sampled codes each, LP over cell-to-label assignments with the aggregate
+accuracy constrained at the deployed level).}
+\label{tab:realfrontier}
+\input{tabs/realfrontier.tex}
+\end{table}
+
+This negative-looking result is the useful one, because it separates two explanations that the
+average-rate literature conflates. The failure of confidence in Section~\ref{sec:dissociation} is
+\emph{not} a shortage of per-input information in the code: the information is there, and the
+deployed readout does not use it. Note also that a code with $\approx16$ distinct cells per input
+is nearly input-specific, which is precisely the idiosyncratic regime that Lemma~\ref{lem:chain}
+prices as memorisation rather than knowledge: high local rate, low shared typicality. The
+certificate of Corollary~\ref{cor:correct} is what reads the shared part, and that is why it
+works where the rate itself does not.
+
+\section{Related work}
+\paragraph{Per-input information.} Information density and conditional information density
+\citep{hellstrom2021,verdu2012} give per-event probability bounds; the chain rule we use as
+bookkeeping is standard \citep{verdu2012,hellstrom2021}. Within the IB literature the per-sample
+viewpoint is present only as localised densities for learnability \citep{wu2019} and as
+average-level label-induced decompositions \citep{structured2026,sourcesuff2024};
+\citet{structured2026} perform our Lemma~\ref{lem:chain} algebra inside a proof and then take
+expectations. Section~\ref{sec:frontier} is the per-input feasibility question, which none of
+them asks.
+\paragraph{Decodable and surrogate objectives.} The decodable information bottleneck
+\citep{dubois2020} scores a code by the label information the best decoder can extract, maximised
+over decoders, rather than by $I(Y;Z)$; the conditional entropy bottleneck \citep{fischer2020}
+replaces the KL term by a conditional entropy; and \citet{kawaguchi2023} analyse when average IB
+quantities predict downstream generalisation. All three are averages. For the decodable objective
+the blindness is not assumed but checked: enumerating all $2^{18}$ deterministic decoders of each
+profile of Theorem~\ref{thm:blind} leaves its optimum at $0.311278$ bits in every profile, with the
+same value under multistart optimisation over stochastic decoders, while $t^\star$ ranges over
+$0,0.25,0.40,0.50$. The conditional-entropy objective is a functional of the same joint, and on this
+family both $I(Y;Z)$ and $H(Y\mid Z)=H(Y)-I(Y;Z)$ are constant, so it cannot separate the profiles
+either. Section~\ref{sec:frontier} asks a question none of them can pose.
+\paragraph{Experiment comparison.} Theorem~\ref{thm:ceiling} is an instance of Blackwell's
+comparison of experiments and Le Cam deficiency \citep{raginsky2011,torgersen1991}; the LP of
+Section~\ref{sec:frontier} is a deficiency-type programme. We claim neither the technique nor the
+inequality, only the feasible-set analysis of a \emph{code} and its blindness consequence. The closest
+neighbour in the bottleneck literature is \citet{sourcesuff2024}, which uses exact Blackwell
+equivalence of experiments to characterise when a source-side representation is sufficient, at the
+level of the whole channel; nothing there speaks to the accuracy vector of individual inputs, and our
+bound is a deficiency-type \emph{ceiling} on that vector rather than an equivalence criterion. The
+per-input word also appears in \citet{tsib2026}, where an attribution is required to be instance-level
+sufficient for the model's output: there the object selected per instance is a sub-\emph{input}, and
+the question is explanation, whereas here the object is the encoder's own code and the question is what
+can be demanded of it simultaneously across inputs.
+\paragraph{Atomless alphabets and the status of a relaxation.} That a supremum over kernels on a
+nonatomic alphabet can be realised by a partition is classical: it is the partition theorem of
+\citet{dvoretzky1951} (the elimination-of-randomization theorem), the same ingredient behind the
+convexity of the range of a nonatomic vector measure \citep{lyapunov1940}, and it is standard
+machinery in value theory and fair division; the purification form for atomless finite-action games
+is stated and proved by
+\citet{khan2006dwww}. It is also live: \citet{wang2026predict} assume a nonatomic feature marginal and obtain a
+measurable coverage assignment from a randomised one by the same theorem. The difference is what the
+purification is applied to. There the objective is an expectation over inputs, so a nonatomic marginal
+turns a randomised rule into a deterministic one without changing its value; here the objective is a
+\emph{minimum} over inputs of per-input accuracy, the relaxation mixes each code symbol identically for
+every input, and the two classes are not equal --- the concentrated profile of
+Proposition~\ref{prop:gap} reads $0.500$ under the relaxation and $0.000$ for every deterministic
+decoder. What we claim as new is therefore the identification, not the technique: that the integrality
+gap of a per-input guarantee vanishes exactly when the code is nonatomic
+(Proposition~\ref{prop:atomless}), and that on a finite alphabet its size is a mesh effect quantified by
+refinement (Proposition~\ref{prop:gran}). One consequence is worth stating because it bounds the reading:
+a randomised decoder is implementable wherever the encoder and decoder can pre-share randomness, which is
+the subject of the common-randomness calculus \citep{ahlswede1993cr}, so the relaxation is the right
+number for a decoder with shared randomness and the wrong number for a per-input guarantee --- on the
+concentrated profile the two readings are $0.500$ and $0.000$ apart.
+\paragraph{Reliability scores.} Max-softmax, energy \citep{liu2020energy}, aggregate-posterior
+typicality \citep{typicality2019,vnduqe2026} --- itself proposed as an out-of-distribution detector
+for deep generative models \citep{nalisnick2019} --- prior-corrected logit adjustment
+\citep{menon2021} and balanced softmax \citep{balanced2020} are our baselines; abstention with a
+budget of answers
+\citep{geifman2017selective,kalai2021} and selective networks \citep{geifman2019selectivenet}
+ask the marginal question, not the joint-feasibility one.
+\paragraph{Group-level fairness objectives.} Information-bottleneck variants that
+enforce group-level independence or invariance \citep{xie2024fairib} optimise a
+\emph{class-averaged} constraint, exactly as group DRO does; our
+Section~\ref{sec:groups} shows why such a constraint cannot witness per-input feasibility: a
+two-thirds worst-class floor and a zero per-input floor coexist in the same channel. We cite them
+as the objectives our guarantee is orthogonal to, not as competitors.
+
+\paragraph{Rate accounting.} The looseness of variational bounds under a fixed prior
+\citep{poole2019}, data-dependent and categorical priors \citep{sefidgaran2025,samaddar2022},
+aggregate-posterior matching \cite{saha2023}, coded-bit estimation \citep{townsend2019}
+and re-examinations of the VIB objective \citep{revisitvib} cover the average version of our
+Section 5 statistics; per-sample variable-rate coding is standard in task-oriented communication
+\citep{deshmukh2024,mcdowell2026,adaptq2025}, which is why our allocation result is reported as
+negative.
+
+\paragraph{Relation to distribution-free guarantees.} Conformal prediction and risk control
+\citep{bates2021} attach a set or a threshold to each test point so that a \emph{expected} risk
+target holds; the per-point object is a prediction set, not a statement about whether the code can
+be required to be correct, and the guarantee remains an average over the exchangeable sample.
+Our $t^\star$ is the largest floor achievable by any decoder of a \emph{given} code, so for that
+code it upper-bounds pointwise the accuracy of any predictor that sees the input only through the
+code --- every post-hoc calibration, threshold, set construction, or randomised rule whose
+randomness is independent of the calibration sample. Once that sample is fixed such a predictor
+is a randomised decoder, and its per-input accuracy is a convex combination of the deterministic
+decoders', so no such layer can raise the guarantee: it is a property of the channel's overlap
+geometry.
+
+\section{Limitations}
+The frontier results are exact for a \emph{finite} code. For a continuous latent the
+LP-versus-deterministic question is settled (Proposition~\ref{prop:atomless}: the relaxation is
+exact, by \citealp{dvoretzky1951}), but the \emph{blindness} theorem is not: matching all four
+average functionals at once is a construction in $\mathbb R^m$, and on a Gaussian code only the
+two rate-side functionals are matched for free (Section~\ref{sec:granularity}). The trained-code
+experiments therefore still run on discretised channels, and the deployed deterministic decoder
+acts on $\mu(x)$, so per-input feasibility there is a measure-zero statement unless the code is
+discretised (our measured-bytes experiment does discretise it).
+Enumerative frontiers scale as $K^m$. The certificate needs a Monte-Carlo mixture estimate whose
+quality depends on the pool (Section~\ref{sec:dissociation} reports sensitivity) and on training
+labels for the class mixtures. The empirical dissociation is on small image models with three
+betas and three noise levels; larger and pretrained encoders were untested at the time the dissociation study was written;
+the rate--congestion transition has since been replicated on two tabular tasks (breast cancer
+and wine) with no image structure at all and on a frozen ImageNet-pretrained ResNet-18 head
+(the paragraph reporting that replication, in Section~\ref{sec:rate}), which removes the pixel-specific
+and the toy-architecture explanations. End-to-end training at $z\in\{32,128,256\}$
+(Section~\ref{sec:rate}) keeps the mechanism behind a wider code on two seeds; the two-seed
+$\beta=10^{-1}$ ladders use the $12$-draw table, while at $\beta=10^{-2}$ a two-seed $100$-draw
+table moves the $z=32$ drop one rung earlier and leaves $z=256$ with $19998$--$20000$ of $20000$
+cells at $\times13$; a $400$-input scored set preserves the width ordering at $\beta=10^{-2}$, while
+the $\beta=10^{-1}$ twin is a same-model $12$-versus-$100$-draw pair.
+At $z=256$ the transition lies beyond the published eight-rung grid, at $\times19.5$ on the
+half-$\hat\sigma$ extension to $\times20$ (Section~\ref{sec:rate}), so ladders that stay on the
+eight-rung table cannot place it; unfreezing the last ResNet-18 block leaves the
+collapse rung unchanged within each of two paired seeds at $\beta=10^{-2}$ on a $2000$-image budget,
+while the two fine-tuning seeds at $\beta=10^{-1}$ keep the zero rung and disagree about the onset.
+The frontier programme uses $200$ test inputs, and the height of a single
+ladder step carries a spread of its own order across independently drawn channel tables, which
+the pretrained paragraph reports rather than smooths over. Finally,
+Theorem~\ref{thm:ceiling} is a ceiling, not a certificate of competence: a high idiosyncratic
+share does not make an input hard, it only removes evidence.
+
+Three further limits, each taken from our own checks rather than assumed. The empirical content of
+that ceiling is concentrated at the congested end: the bound equals its own cap of $1$ on
+$965$ of the $1009$ synthetic inputs and at every fine-lattice level of both trained codes, so
+outside a handful of coarse lattices the verification proves only consistency. The coarse sweep
+that does reach the informative regime is calibrated in units of the spread of the encoder's
+\emph{means}, which shrinks as $\beta$ grows, so $\delta/\hat\sigma$ stops tracking the rate at
+large $\beta$ and the congested regime is sampled only on the low-$\beta$ ladders. And the blindness
+of decodable information is established by exhaustive enumeration on this particular family; we do
+not have a theorem that $\max_D I(Y;\hat Y)$ is blind for every construction.
+
+\section{Conclusion}
+What a code can guarantee about an input is a joint-feasibility problem, and it is invisible to
+every average mutual information: identical $I(X;Z)$, $I(Y;Z)$, $I(Z;C)$ and $\pi_{\max}$ are
+compatible with uniform guarantees from $0$ to $\tfrac12$, and with the pathological case in which
+each input can be known but they cannot all be. Rate should be audited per input and in coded
+bytes, and evidence should be read from the density a code shares with its decoded class, not from
+the density it carries alone --- the latter, we measure, is worse than chance at predicting
+whether the classifier is right. Where the mechanism was checked end to end it moved as the account
+predicts: widening a trained code pushes the transition out by pushing cell-sharing out, seven
+widths obeying one ordering, and partially unfreezing a pretrained backbone changes the accuracy of
+the code without changing what it can be required to know.
+
+
+\appendix
+\section{Proofs and derivations}
+\subsection{The blindness family, computed line by line}
+Fix $m$ pairs, $X=\{0,\dots,2m-1\}$ with $P(x)=\frac1{2m}$, $y(2k)=0$, $y(2k+1)=1$, and a profile
+$p\in[0,1]^m$. The alphabet is $\{\mathrm{pr}_{0},\dots,\mathrm{pr}_{2m-1},\mathrm{sh}_{0},\dots,
+\mathrm{sh}_{m-1}\}$ and
+$Q(\mathrm{pr}_{2k+j}\mid 2k+j)=p_k$, $Q(\mathrm{sh}_k\mid 2k+j)=1-p_k$, zero elsewhere.
+Each private code is produced by exactly one input, so the pair's three codes carry mass
+$p_k/(2m)$, $p_k/(2m)$ and $(1-p_k)/(2m)$ from the two inputs of the pair respectively.
+
+\emph{Maximum aggregate accuracy.} A decoder chooses one label per code, and each code's
+contribution to $\pi$ is independent of the other codes: private code $\mathrm{pr}_{2k+j}$ is
+worth $p_k/(2m)$ if labelled $y(2k+j)$ and $0$ otherwise, and $\mathrm{sh}_k$ is worth
+$(1-p_k)/(2m)$ whichever label is chosen (the two contributing inputs have opposite labels,
+so exactly one is served). Hence
+$\pi_{\max}=\sum_k \bigl(2p_k+(1-p_k)\bigr)/(2m)=\frac{1+\bar p}{2}$,
+and the maximisers are exactly the decoders that label every private code correctly; the shared
+codes are free (ties).
+
+\emph{Optimal uniform guarantee.} Under any maximiser, the two inputs of pair $k$ receive
+$a_{2k}=p_k+(1-p_k)\mathbf 1[f(\mathrm{sh}_k)=0]$ and
+$a_{2k+1}=p_k+(1-p_k)\mathbf 1[f(\mathrm{sh}_k)=1]$, so $\min(a_{2k},a_{2k+1})=p_k$ whichever
+label the shared code takes, and $t^\star=\min_k p_k$. The same argument applies for any
+requirement $\pi_0\le\pi_{\max}$: relaxing the aggregate requirement cannot raise the floor,
+because the constraint that binds is per pair, not aggregate. Thus
+$t^\star(\pi_0)=\min_k p_k$ for every $\pi_0\in[0,\pi_{\max}]$: the claim is verified by
+enumeration over $\pi_0\in\{0,0.2,0.4,0.5,0.6,\pi_{\max}\}$ for five profiles in
+Section~\ref{sec:groups}, and the guarantee is not on any accuracy--fairness tradeoff curve that
+average quantities could trace.
+
+\emph{Average mutual informations.} $P(z)=\bar P(z)$ gives
+$\bar P(\mathrm{pr}_{2k+j})=p_k/(2m)$ and $\bar P(\mathrm{sh}_k)=(1-p_k)/m$. The entropy is
+\begin{equation*}
+H(Z)=\sum_k\left[\frac{p_k}{m}\log_2\frac{2m}{p_k}
++\frac{1-p_k}{m}\log_2\frac{m}{1-p_k}\right],
+\qquad
+H(Z\mid X)=\sum_k\frac{1}{m}H_b(p_k),
+\end{equation*}
+so $I(X;Z)=H(Z)-H(Z|X)$ reduces to
+$\log_2 2m-(1-\bar p)$ because $H(X\mid Z)=\Pr[\text{shared}]\cdot 1=\,(1-\bar p)$
+(the private case resolves $X$ completely). $I(Y;Z)=\bar p$ since $Y$ is determined by a
+private code and uniform given a shared code. For $C$: $C$ is a function of the pair index
+(private codes give $C=1$, shared codes give $C=1$ for exactly one of the two inputs), so
+$H(C\mid Z)=(1-\bar p)$ bits and $I(Z;C)=H_b(\pi)-(1-\bar p)$ with $\pi=\frac{1+\bar p}{2}$.
+All four depend on $p$ only through $\bar p$. \hfill$\blacksquare$
+
+\subsection{The linear programmes}
+With variables $u_{z,c}\in[0,1]$ ($\sum_c u_{z,c}=1$) and $t$, the relaxation of
+Section~\ref{sec:frontier} is
+\[
+\begin{aligned}
+\text{(ceil)}\quad&\max_{u}\ \sum_{z}Q(z|x)\,u_{z,y(x)}
+&&\text{s.t.}\ \ \textstyle\sum_c P(c)\sum_z u_{z,c}\bar P_c(z)\ge\pi_0,\ \ \sum_c u_{z,c}=1;\\
+\text{(guarantee)}\quad&\max_{u,t}\ t
+&&\text{s.t.}\ \ \textstyle\sum_z Q(z|x)\,u_{z,y(x)}\ge t\ \ \forall x,\ \ \text{same rows.}
+\end{aligned}
+\]
+Deterministic decoders are the vertices with $u\in\{0,1\}$, so the first programme is a valid
+upper bound and the second upper-bounds the deterministic guarantee; the difference between the
+two values is reported in Table~\ref{tab:frontier} and is the price of asking for a guarantee
+rather than an expectation.
+
+\subsection{Proof of Theorem~\ref{thm:ceiling}}
+Let $A=\{z:f(z)=y(x)\}$, so $\mathrm{acc}(x)=Q(\cdot|x)(A)$. By definition of total variation,
+$Q(A)\le G_x(A)+\TV(Q(\cdot|x),G_x)$. Every input in the support of $G_x$ has a label other
+than $y(x)$, so all of its mass on $A$ is misclassified, and the population error satisfies
+$1-\pi\ \ge\ \Pr[Y\ne y(x)]\cdot G_x(A)=(1-P(y(x)))\,G_x(A)$. Combining gives the first
+inequality. Pinsker's inequality applied to $\rho(x)=\KL(Q(\cdot|x)\|\bar P)$ and
+$\TV(\bar P,G_x)=P(y(x))\TV(\bar P_{y(x)},G_x)\le P(y(x))$ give the second. \hfill$\blacksquare$
+
+\section{Reproducibility}
+\texttt{code2/verify\_per\_sample.py} (identities, ceiling, Gaussian grids),
+\texttt{code2/verify\_frontier.py} (enumeration + LP, Table~\ref{tab:frontier}),
+\texttt{code2/decodable\_blindness.py} (all $2^{18}$ decoders of each blindness profile scored by
+decodable information, deterministic enumeration plus multistart optimisation over stochastic
+decoders),
+\texttt{code2/exp\_vib\_rate.py} (four-rate audit, measured bytes),
+\texttt{code2/exp\_lrr2.py} (certificate vs baselines with bootstrap CIs),
+\texttt{code2/frontier\_real.py} (frontier of a trained code),
+\texttt{code2/frontier\_rate.py} and \texttt{code2/frontier\_rate2.py} (the rate ladders of the
+three trained codes), \texttt{code2/frontier\_nonimage.py} (the same ladders on two tabular tasks,
+breast cancer and wine, with the deterministic guarantee enumerated wherever $K^m$ allows), \texttt{code2/ceiling\_link.py} and \texttt{code2/gen\_link\_tab.py} (certificate versus
+exact ceiling, Section~\ref{sec:link}; the dataset name is an argument, so the FashionMNIST study and
+its MNIST replication are the same code with the same seeds),
+\texttt{code2/link\_vacuity.py} (whether the per-input ceiling bound is non-vacuous on a trained
+code, and where it bites), \texttt{code2/patch\_link\_mnist.py} and
+\texttt{code2/patch\_vacuity.py} (the two prose patches of Section~\ref{sec:link}, every number in
+them read from the JSONs),
+\texttt{code2/tv\_predict.py} and \texttt{code2/gen\_tvbound\_tab.py} (pair bound versus
+the LP on real codes, Table~\ref{tab:tvbound}), \texttt{code2/family\_general.py} (the integrality
+gap as an identity in $p$: LP on $36$ profiles and exact enumeration on $23$, the attaining decoder
+checked input by input, including the profiles that make the formula vacuous at the endpoints),
+\texttt{code2/mnist\_wsweep.py} (the width ordering rerun on MNIST at the six shared widths: the
+onset and zero rung sequences and the coarsest-rung counts, compared width by width with
+FashionMNIST and hard-asserted monotone),
+\texttt{code2/kernel\_example.py} (the exact counterexample of
+Example~\ref{ex:kernel}, verified in rational arithmetic and cross-checked against a float LP
+solver), \texttt{code2/lumping\_check.py} (coarsening monotonicity: synthetic channels, exact
+enumeration, and the odd/even lattice nesting test on real codes),
+\texttt{code2/oddstep\_nesting.py} (the nesting lemma itself: both directions checked on $3200$
+constructed channel tests over integer step ratios $1$ to $8$, with a hard failure if an odd ratio splits
+a cell or a split cell fails to change the channel),
+\texttt{code2/coarsen\_reversal\_real.py} (exhaustive deterministic guarantees on the trained
+channel at a fixed floor, which is where the question cannot be posed: every enumerable lattice was
+already fully congested) and \texttt{code2/lattice\_reversal\_search.py} (the same question on
+minimal round-to-lattice channels, with the lumped channel as the control that Proposition (a)/(b)
+must satisfy),
+\texttt{code2/gen\_rate\_multi\_tab.py} (Table~\ref{tab:ratemulti}),
+\texttt{code2/make\_figs5.py} (Figure~\ref{fig:rate}),
+\texttt{code2/make\_figs2.py}, \texttt{code2/make\_figs4.py} (figures),
+\texttt{code2/gen\_lrr\_tab.py}, \texttt{code2/gen\_rate\_tab.py},
+\texttt{code2/gen\_realfrontier\_tab.py} (tables generated from the JSONs),
+\texttt{code2/permodel\_auc.py} (per-model score AUCs from the saved score dumps),
+\texttt{code2/atomless\_gap.py} (the refinement ladder $L=1\dots32$ over $16$ finite codes, with
+the LP checked to be refinement-invariant, the Gaussian partitions built cell by cell and
+integrated with the CDF, the mesh-resolution study and the variance-mismatch pairs),
+\texttt{code2/patch\_atomless.py} (the prose and tables of Section~\ref{sec:granularity}),
+\texttt{code2/lattice\_neff.py} (probe of the same trained encoder with $400$ draws per input: the
+distinct-cell count, entropy effective support and $99\%$-coverage size of the snapped channel at each
+lattice step),
+\texttt{code2/frontier\_bigL.py} (the same ladder with the channel table built from $100$ draws per
+input instead of $12$, its sparse LP validated against the dense programme and against exhaustive
+enumeration before use),
+\texttt{code2/frontier\_pretrained.py} (the same ladder on a frozen
+ImageNet ResNet-18 with only the stochastic head trained, 8 levels and both
+channel estimates), \texttt{code2/frontier\_pretrained\_deep.py} (both tables at every
+level with the budget cap lifted, and the reproduction guard against the published file) and
+\texttt{code2/frontier\_pretrained\_bias.py} (four independently drawn tables at the three
+rungs around the transition, plus the paired sign test over the two sample sizes),
+\texttt{code2/colab\_e2e.py} (the end-to-end width run of Section~\ref{sec:rate}, self-contained with
+its LP self-test and the gzip/base64 result block decoded by \texttt{code2/ingest\_e2e.py}; the
+$100$-draw and $400$-input reruns are the same script with \texttt{E2E\_LS=100} and
+\texttt{E2E\_NTE=400}, and the seven-width sweep with \texttt{E2E\_ZS=16,32,...,256}),
+\texttt{code2/width\_step\_law.py} (the same seven-width sweep read in absolute lattice steps rather
+than multiples of $\hat\sigma$), \texttt{code2/grid\_refine\_test.py} (the published eight rungs
+against a half-$\hat\sigma$ grid read inside one session, and the bracket-width comparison) and
+\texttt{code2/absolute\_onset\_law.py} (the half-$\hat\sigma$ grid extended to $\times20$ on the four
+widest codes, merged with the seven-width run after asserting the two agree on $\hat\sigma$, on the
+deployed accuracy and on every shared rung),
+\texttt{code2/finetune\_r18.py} (the frozen-versus-last-block-tuned ResNet-18 pairs at two seeds, on
+the local CPU stack with cached ImageNet weights),
+\texttt{code2/audit\_claims.py} (every number in the prose re-derived from the JSONs and
+string-matched against the source), \texttt{code2/check\_build.py} (errors, undefined
+references, table row terminators, overfull boxes). Machine-readable results are in
+\texttt{results2/*.json} and logs in \texttt{results2/*.log}. Fixed seeds throughout;
+CPU-only PyTorch 2.10 / NumPy 2.x / SciPy 1.16, except the two-seed width run (PyTorch 2.11 on a
+Colab CPU instance); its $100$-draw, $400$-input and seven-width reruns ran on the same Colab stack,
+and the ResNet-18 pairs on the local stack.
+The kernel counterexample of Proposition~\ref{prop:coarsen} has a second, independently written
+verification, \texttt{review/indep\_kernel\_check.py} (HiGHS LP plus a from-scratch deterministic
+decoder enumeration rather than exact vertex enumeration): $7$ of $7$ checks agree with the
+published values.
+
+\bibliographystyle{plainnat}
+\begin{thebibliography}{99}
+\small
+\bibitem[Alemi et al.(2017)]{alemi2017vib} Alemi, A.~A., Fischer, I., Dillon, J.~V., Murphy, K.
+(2017). Deep variational information bottleneck. ICLR, arXiv:1612.00410.
+\bibitem[Deshmukh et al.(2024)]{deshmukh2024} Deshmukh, S., et al. (2024). Distributed and
+rate-adaptive feature compression for task-oriented communication. arXiv:2404.02179.
+\bibitem[Dubois et al.(2020)]{dubois2020} Dubois, Y., Kiela, D., Schwab, D.~J., Vedantam, R.
+(2020). Learning optimal representations with the decodable information bottleneck. NeurIPS,
+arXiv:2009.12789.
+\bibitem[Dvoretzky et al.(1951)]{dvoretzky1951} Dvoretzky, A., Wald, A., Wolfowitz, J. (1951).
+Elimination of randomization in certain statistical decision procedures and zero-sum two-person
+games. Annals of Mathematical Statistics 22(1):1--21.
+\bibitem[Wang and Dobriban(2026)]{wang2026predict} Wang, T., Dobriban, E. (2026). Optimal
+decision-making based on prediction sets. arXiv:2602.00989.
+\bibitem[Ahlswede and Csiszár(1993)]{ahlswede1993cr} Ahlswede, R., Csiszár, I. (1993). Common
+randomness in information theory and cryptography, Part I: Secret sharing. IEEE Trans. Inform.
+Theory 39(4).
+\bibitem[Khan et al.(2006)]{khan2006dwww} Khan, M.~A., Rath, K.~P., Sun, Y. (2006). The
+Dvoretzky--Wald--Wolfowitz theorem and purification in atomless finite-action games.
+Int.~J.~Game Theory 34:91--104.
+\bibitem[Lyapunov(1940)]{lyapunov1940} Lyapunov, A.~A. (1940). Sur les fonctions-vecteurs
+compl\`etement additives. Izvestiya Akademii Nauk SSSR, Seriya Matematicheskaya 4(6):465--478.
+\bibitem[Fischer(2020)]{fischer2020} Fischer, I. (2020). The conditional entropy bottleneck. Entropy
+22:999.
+\bibitem[Geifman and El-Yaniv(2017)]{geifman2017selective} Geifman, Y., El-Yaniv, R. (2017).
+Selective classification for deep neural networks. NeurIPS.
+\bibitem[Geifman and El-Yaniv(2019)]{geifman2019selectivenet} Geifman, Y., El-Yaniv, R. (2019).
+SelectiveNet: a deep neural network with an integrated reject option. ICML, PMLR
+97:2151--2159.
+\bibitem[Hellström and Durisi(2021)]{hellstrom2021} Hellström, F., Durisi, G. (2021).
+Generalization bounds via information density and conditional information density. IEEE Trans.
+Inform. Theory, arXiv:2005.08044.
+\bibitem[Kalai and Kanade(2021)]{kalai2021} Kalai, A.~T., Kanade, V. (2021). Towards optimally
+abstaining from prediction with OOD test examples. NeurIPS, arXiv:2105.14119.
+\bibitem[Kawaguchi et al.(2023)]{kawaguchi2023} Kawaguchi, K., et al. (2023). How does information
+bottleneck help deep learning? ICML, arXiv:2305.18887.
+\bibitem[Xie et al.(2024)]{xie2024fairib} Xie, J., Yang, Y., Wang, Z., Wu, L. (2024). Learning
+fair representations for recommendation via the information bottleneck principle. IJCAI,
+pp. 2469--2477.
+\bibitem[Menon et al.(2021)]{menon2021} Menon, A.~K., Jayasumana, S., Rawat, A.~S., Jain, H.,
+Veit, A., Kumar, S. (2021). Long-tail learning via logit adjustment. ICLR, arXiv:2007.07314.
+\bibitem[Ren et al.(2020)]{balanced2020} Ren, J., Yu, C., Sheng, S., Ma, X., Zhao, H., Yi, S.
+(2020). Balanced meta-softmax for long-tailed visual recognition. NeurIPS, arXiv:2007.10740.
+\bibitem[Heng and Soh(2025)]{heng2025abstain} Heng, A., Soh, H. (2025). Know when to abstain:
+optimal selective classification with likelihood ratios. arXiv:2505.15008.
+\bibitem[Ruan et al.(2021)]{bitsback2021} Ruan, Y., Ullrich, K., Severo, D., Townsend, J.,
+Khisti, A., Doucet, A. (2021). Improving lossless compression rates via Monte Carlo bits-back
+coding. ICML, arXiv:2102.11086.
+\bibitem[Demisse(2026)]{lambdavae2026} Demisse, G. (2026). $\lambda$-VAE: variance equalization
+for posterior collapse. arXiv:2607.05531.
+\bibitem[Nalisnick et al.(2019)]{typicality2019} Nalisnick, E., Matsukawa, A., Whye Teh, Y.,
+Lakshminarayanan, B. (2019). Detecting out-of-distribution inputs to deep generative models using
+typicality. arXiv:1906.02994.
+\bibitem[Nalisnick et al.(2019)]{nalisnick2019} Nalisnick, E., Matsukawa, A., Whye Teh, Y.,
+Gorur, D., Weller, B. (2019). Do deep generative models know what they don't know? ICLR Workshop,
+arXiv:1810.09136.
+\bibitem[Poole et al.(2019)]{poole2019} Poole, B., Ozair, S., van den Oord, A., Alemi, A.~A.,
+Tucker, G. (2019). On variational bounds of mutual information. ICML, arXiv:1905.06922.
+\bibitem[Raginsky(2011)]{raginsky2011} Raginsky, M. (2011). Shannon meets Blackwell and Le Cam:
+channels, codes, and statistical experiments. ISIT, pp. 1220--1224.
+\bibitem[Samaddar et al.(2022)]{samaddar2022} Samaddar, A., et al. (2022). Sparsity-inducing
+categorical prior improves robustness of the information bottleneck. NeurIPS, arXiv:2203.02592.
+\bibitem[Sefidgaran et al.(2025)]{sefidgaran2025} Sefidgaran, M., et al. (2025). Generalization
+guarantees for representation learning via data-dependent Gaussian mixture priors.
+arXiv:2502.15540.
+\bibitem[Saha et al.(2024)]{saha2023} Saha, S., et al. (2024). Matching aggregate posteriors in
+the variational autoencoder. ICPR, arXiv:2311.07693.
+\bibitem[Torgersen(1991)]{torgersen1991} Torgersen, E.~N. (1991). Comparison of Statistical
+Experiments. Cambridge University Press, Encyclopedia of Mathematics and its Applications 36.
+\bibitem[Townsend et al.(2019)]{townsend2019} Townsend, J., Bird, T., Kunze, J., Barber, D.
+(2019). Practical lossless compression with latent variables using bits back coding. ICLR,
+arXiv:1901.04866.
+\bibitem[Verdú and Han(2012)]{verdu2012} Verdú, S., Han, T.~S. (2012). Information spectrum
+methods. Foundations and Trends in Communications and Information Theory.
+\bibitem[Wu et al.(2019)]{wu2019} Wu, T., Fischer, I., Chuang, I.~L., Tegmark, M. (2019).
+Learnability for the information bottleneck. Entropy 21:924.
+\bibitem[Zhang et al.(2026)]{structured2026} Zhang, Y., et al. (2026). Rethinking the information
+bottleneck: structured decomposition under label-induced partitions. arXiv:2610.01175.
+\bibitem[Armstrong(2026)]{sourcesuff2024} Armstrong, J. (2026). Source-side sufficiency for the
+information bottleneck: exact reduction and finite-block equivalence. arXiv:2604.26744.
+\bibitem[Zha et al.(2026)]{scib2026} Zha, Y., et al. (2026). Robust representation learning for
+spiking neural networks based on conditional information bottleneck. arXiv:2610.28110.
+\bibitem[Tavakoli and Bose(2026)]{whatsubject2026} Tavakoli, H., Bose, B. (2026). What should an
+information-bottleneck encoder learn? Separating representation learning from rate control.
+arXiv:2610.36255.
+\bibitem[McDowell et al.(2026)]{mcdowell2026} McDowell, C., et al. (2026). Significance-driven
+semantic communication. arXiv:2608.28441.
+\bibitem[Tatsumi et al.(2025)]{adaptq2025} Tatsumi, Y., Zeng, Z., Watanabe, H. (2025).
+Training-free adaptive quantization for variable rate image coding for machines. arXiv:2511.05836.
+\bibitem[Weingarten et al.(2025)]{revisitvib} Weingarten, N.~Z., Butman, M., Yakhini, Z.,
+Bustin, R. (2025). Revisiting the variational information bottleneck. ICLR 2025 submission,
+OpenReview w10KdRwcMk.
+\bibitem[Companion manuscript(2026)]{knowing2026} Companion manuscript (2026). \emph{Knowing what
+you know: coverage ceilings for selective prediction under the information bottleneck}. In
+preparation; the coverage ceiling cited here is its Theorem~1.
+\bibitem[Sagawa et al.(2020)]{sagawa2020} Sagawa, S., Koh, P.~W., Hashimoto, T.~B., Liang, P.
+(2020). Distributionally robust neural networks for group shifts: on the importance of
+regularization for worst-case generalization. ICLR, arXiv:1911.08731.
+\bibitem[Bates et al.(2021)]{bates2021} Bates, S., Angelopoulos, A., Lei, L., Malo, J., Jordan,
+M.~I. (2021). Distribution-free, risk-controlling prediction sets. ICML, arXiv:2101.02703.
+\bibitem[Tishby et al.(1999)]{tishby1999} Tishby, N., Pereira, F.~C., Bialek, W. (1999). The
+information bottleneck method. arXiv:physics/0007014.
+\bibitem[Liu et al.(2020)]{liu2020energy} Liu, W., Wang, X., Owens, J., Li, Y. (2020).
+Energy-based out-of-distribution detection. NeurIPS.
+\bibitem[Gondkar et al.(2026)]{vnduqe2026} Gondkar, A., et al. (2026). VNDUQE: information-theoretic
+novelty detection using deep variational information bottleneck. arXiv:2605.11551.
+\bibitem[Zheng et al.(2026)]{tsib2026} Zheng, X., Liu, Z., Chen, Z., Akewar, M., Bhimani, J.,
+Liu, J., Sha, M., Ni, J., Cheng, W., Luo, D. (2026). Towards a unified information
+bottleneck framework for time series explanations. arXiv:2608.25897.
+\end{thebibliography}
+\end{document}
