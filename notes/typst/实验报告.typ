@@ -36,11 +36,9 @@ $
 $
    sin(0.1 pi x) + 0.2 sin(pi x) + 0.4 sin(100/3 pi x) +0.6 sin(200/3 pi x) +sin(100 pi x)
 $
-这个例子的求解难点在于,$f(x)$中,频率为$100pi$的振幅为$(100 pi)^2$,而频率为$0.1
-  pi$的振幅为$(0.1 pi)^2$,相差了$10^6$数量级,导致训练过程中,高频部分的误差主导了损失函数,使得低频部分的误差无法得到有效优化,最终导致模型难以收敛到真实解。
+这个例子的求解难点在于,$f(x)$中,频率为$100pi$的振幅为$(100 pi)^2$,而频率为$0.1 pi$的振幅为$(0.1 pi)^2$,相差了$10^6$数量级,导致训练过程中,高频部分的误差主导了损失函数,使得低频部分的误差无法得到有效优化,最终导致模型难以收敛到真实解。
 
-使用NN-CA单网络，傅里叶特征频率满足$omega ~ cal(N)(0,sigma^(-2))$,
-  $sigma=0.006$总特征数为4096，单个token包含的特征维数$d_q=256$,隐藏层层数6，使用Adam优化器训练5000 epoch,训练结果见右下图.
+使用NN-CA单网络，傅里叶特征频率满足$omega ~ cal(N)(0,sigma^(-2))$, $sigma=0.006$总特征数为4096，单个token包含的特征维数$d_q=256$,隐藏层层数6，使用Adam优化器训练5000 epoch,训练结果见右下图.
 #align(center)[
   #columns(2)[
 #figure(image("assets/image-1.png",height:250pt))
@@ -49,15 +47,13 @@ $
 
 可以看出，模型较好的捕捉了高频部分的特征，但在低频部分表现较差，难以收敛到真实解。
 
-论文使用了一种双网络方法,在训练过程中,一个网络$u_l$专注于捕捉低频特征,另一个网络$u_h$专注于捕捉高频特征,最终预测为$u_h+ alpha u_l$.
-  文中比较了$alpha$恒定0或1,可学习参数,和Loss函数对$alpha$求导为0的极小值点$alpha_text("opt")$.其中$alpha_text("opt")$是每次迭代中用一些样本点计算得到的近似值，论文比较了四种方法得到的结果,发现可学习参数和$alpha_text("opt")$方法表现较好,而恒定0或1的方法表现较差。
+论文使用了一种双网络方法,在训练过程中,一个网络$u_l$专注于捕捉低频特征,另一个网络$u_h$专注于捕捉高频特征,最终预测为$u_h+ alpha u_l$. 文中比较了$alpha$恒定0或1,可学习参数,和Loss函数对$alpha$求导为0的极小值点$alpha_text("opt")$.其中$alpha_text("opt")$是每次迭代中用一些样本点计算得到的近似值，论文比较了四种方法得到的结果,发现可学习参数和$alpha_text("opt")$方法表现较好,而恒定0或1的方法表现较差。
 
 然而在复现中，$u_l$的输出总是在很少几次训练后就恒为0，导致双网络架构失去意义。经过多次实验，观察到$u_l$收敛于0的倾向在多组超参数下都存在,包括不同的学习率、不同的频率分布参数$sigma$,不同的网络结构等。
 #wrap-content(image("assets/image-4.png",height:259pt,width: 300pt,fit:"stretch"),[经过分析，这可能是由于训练过程中的边界条件在损失函数中加强太大导致的。论文中损失函数$L=L_f + lambda L_b$，其中无论是$L_f$还是$L_b$,都混合了$u_h$和$u_l$，由于$L_f$的量级很大，论文中设置了$lambda$为1e3或1e4,原文中让$u_h$在边界处和满足原方程的Dirichlet条件，$u_l$在边界满足输出为0的Dirichlet条件，这本身就让$u_l$倾向于输出0.而我们本来期待$u_l$学习的低频部分，如$sin(0.1pi x)$,在二阶导后的量级为$(0.1pi)^2$,远小于高频部分的量级$(100pi)^2$,因此模型倾向于忽略拟合低频部分，让$u_l$的输出恒为0.])
 
 为了解决这个问题，有以下方法可以尝试:
-- 解耦$L_b$中$u_h$和$u_l$的部分,让两部分有不同的权重,例如$L_b= lambda_h L_b(u_h) +
-  lambda_l L_b(u_l)$,并且设置$lambda_l$远小于$lambda_h$,以减轻边界条件对$u_l$的影响。
+- 解耦$L_b$中$u_h$和$u_l$的部分,让两部分有不同的权重,例如$L_b= lambda_h L_b(u_h) + lambda_l L_b(u_l)$,并且设置$lambda_l$远小于$lambda_h$,以减轻边界条件对$u_l$的影响。
 - 不再让$u_l$在边界满足输出为0的Dirichlet条件,而是让$u_h + alpha u_l$整体满足原始边界条件,这样可以让$u_l$有更多的自由度来学习低频部分。
 
 由于第二种方法超参数少而且似乎更加自然,我们首先尝试了第二种方法,并且在这种情景下重新推导了$alpha_text("opt")$的计算公式.结果证明了这个方法能解决$u_l$输出恒为0的问题.
@@ -102,7 +98,7 @@ $a_i$是模型权重(weights),设置$omega,phi$均为可学习参数，总特征
 
 我们认为神经网络的输出近似为真实解$u(x)$，我们使用七点中心差分计算二阶导数:
 $
-   u''_i approx (2u_(i-3) - 27u_(i-2) + 270u_(i-1) - 490u_i + 270u_(i+1) - 27u_(i+2) + 2u_(i+3)) / (180h^2)
+   u''_i approx (2u_(i-3) - 27u_(i-2) + 270u_(i-1) - 490u_i + 270u_(i+1) - 27u_(i+2) + 2u_(i+3)) / (180h^2) 
 $
 误差项为
 $(-h^6/560 u^((8))(xi))$
@@ -138,9 +134,7 @@ def diff_operator(self, X, model):
 ```
 输入 $bold(X) in bb(R)^(N times 2)$，输出$bold(u) in bb(R)^(N times 1)$,$bold(u)$关于$bold(X)_k$的雅可比矩阵为
 
-$cal(J) in
-  bb(R)^(N times 1 times N times 1)$,$cal(J)_(i,1,j,1)=(partial bold(u)^((i)))/(partial
-  bold(X)_(k)^((j)))$(省略k,并且认为$bold(u)=bold(u)_1$),
+$cal(J) in bb(R)^(N times 1 times N times 1)$,$cal(J)_(i,1,j,1)=(partial bold(u)^((i)))/(partial bold(X)_(k)^((j)))$(省略k,并且认为$bold(u)=bold(u)_1$),
 
 $bold(u)_(i,1)$仅与$bold(x)_(i,k)$有关.
 因此可以简化为
@@ -150,10 +144,9 @@ $
 $v=$torch.ones_like($U$) , $v in bb(R)^(N times 1)$,\
 则torch.autograd.grad(u,[x, y][i],grad_outputs=torch.ones_like(u)) 的计算过程为:
 $
-  bold(g)^((j)) = bold(v)^top dot cal(J)= sum_(i,1) bold(v)_(1)^((i)) dot cal(J)_(i,1,j,1) =
-    sum_i 1 dot  cal(J)_(i,1,j,1)
+  bold(g)^((j)) = bold(v)^top dot cal(J)= sum_(i,1) bold(v)_(1)^((i)) dot cal(J)_(i,1,j,1) = sum_i 1 dot  cal(J)_(i,1,j,1) 
   = (partial bold(u)^((j)))/(partial bold(X)_(k)^((j)))
-$
+$ 
 其中$k=1,2, quad j = 1,2 dots N$.
 
 $text("完整写出后")
@@ -165,14 +158,13 @@ dots.v,
 $
 
 $bold(g)_k in bb(R)^(N times 1)$ 对$bold(X)_k in bb(R)^(N times 1)$的雅可比矩阵为：
-$ cal(J)_(i,1,j,1)=cases((partial bold(g)_k^((i)))/(partial bold(X)_k^((j)))\, quad i=j ,
-0\, quad i!=j)
+$ cal(J)_(i,1,j,1)=cases((partial bold(g)_k^((i)))/(partial bold(X)_k^((j)))\, quad i=j , 
+0\, quad i!=j) 
 $
 
 则hess_ii的计算过程为:
 $
-  bold(h)_(k)^((j)) =bold(v)^top dot cal(J)= sum_(i) bold(v)^((i)) dot cal(J)_(i,1,j,1) = 1 dot cal(J)_(j,1,j,1) =
-    (partial bold(g)_k)^((j))/(partial bold(X)_k^((j)))
+  bold(h)_(k)^((j)) =bold(v)^top dot cal(J)= sum_(i) bold(v)^((i)) dot cal(J)_(i,1,j,1) = 1 dot cal(J)_(j,1,j,1) = (partial bold(g)_k)^((j))/(partial bold(X)_k^((j))) 
 $
 其中$k=1,2, quad j = 1,2 dots N$.
 #align(center)[
@@ -181,8 +173,7 @@ $- Delta u = - sum_(k=1)^2 bold(h)_k$
 #pagebreak()
 == 该方法的不足
 === 依赖先验频谱信息
-尽管论文中几乎没有透露傅里叶特征采样的基础特征$omega_(text("base"))~cal(N)(0,sigma^(-2)
-  bb(I))$中$sigma$的取值信息，实验中却发现这是最重要的参数，甚至比网络结构，是否加入交叉注意力还有重要。当采样频率不能覆盖目标函数的主要频率时，几乎无法收敛。
+尽管论文中几乎没有透露傅里叶特征采样的基础特征$omega_(text("base"))~cal(N)(0,sigma^(-2) bb(I))$中$sigma$的取值信息，实验中却发现这是最重要的参数，甚至比网络结构，是否加入交叉注意力还有重要。当采样频率不能覆盖目标函数的主要频率时，几乎无法收敛。
 === Cross Attention使得计算量激增
 加入Cross Attention后，使用T4 GPU的训练时间增加了10倍以上，论文中使用RFF-CA和RFF-NN网络训练同样的epoch数量，这样比较是不公平的。
 === 自适应性频率增强策略

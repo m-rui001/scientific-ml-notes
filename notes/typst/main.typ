@@ -7,6 +7,7 @@
 #show raw: set text(font: "DejaVu Sans Mono", size: 9pt)
 #show raw.where(block: true): set block(width: 100%, inset: 0.7em, stroke: rgb(80%, 80%, 85%), radius: 3pt)
 
+
 #align(center)[
   #block(text(size: 28pt, weight: "bold")[TypstQQ 群技术精华])
   #v(0.4em)
@@ -34,6 +35,7 @@
 3. 自定义 marker：`#set list(marker: box(fill: black, inset: 0.2em))`；`#set enum(numbering: n => "→")` numbering 可为函数。图 （截图 a9f90741 未包含在本地资源中）
 4. 0.15 better list：`#set enum(number-align: horizon)`（新参数）；list 用 `#set list(marker: align(horizon)[--])`；itemize 仍可透传 baseline（PR #8150 已合并）。图 （截图 6399c793 未包含在本地资源中）
 
+
 == 标题 / 目录
 
 5. #strong[附录覆盖 heading numbering]：`#set heading(numbering: "1.1")` 后，附录用 `#set heading(numbering: (_, ..nums) => numbering("1", ..nums))`（吞掉第一级参数）。图 （截图 92e5e8d1 未包含在本地资源中）
@@ -44,6 +46,7 @@
 10. 多文件 include 各文档独立 outline：包 suboutline / `#set heading(offset: 1)`。
 11. 目录条目无虚线无页码：给该标题加 label，在 show outline.entry 中按 label 分支。
 
+
 == 段落 / 中文排版
 
 12. #strong[行间公式是否终结段落]（first-line-indent all:false 后仍缩进）：`#set par(first-line-indent: (amount: 2em, all: false))` 中块级公式后文本仍算新段。FAQ 文档 https://typst.dev/guide/FAQ/block-equation-in-paragraph.html。图（截图 e87a88b9 未包含在本地资源中） /（截图 57fb8062 未包含在本地资源中）
@@ -52,6 +55,7 @@
 15. 中文换行去空格 FAQ：https://typst-doc-cn.github.io/guide/FAQ/chinese-remove-space.html
 16. CJK 标点挤压在 text()/show 后消失：issue #5474（字体分段导致）。
 17. 中英文省略号同为 U+2026，不区分。
+
 
 == 数学
 
@@ -64,11 +68,13 @@
 24. `$a$` 与 `$ a $` 不同（后者 block 参数判断为 display-like），box 包裹宽度异常。图 （截图 d6ea1ee2 未包含在本地资源中）
 25. 字符串→公式：`eval` 带 mode: math 参数。
 
+
 == 表格
 
 26. "修改某一列的行高"是伪需求——行高整表共享；rows 参数 `rows: (0.9cm,) * 9 + (1.6cm,) + ...`。图 （截图 cc05f5d7 未包含在本地资源中）
 27. 表格长单词换行：`set text(hyphenate: true)` / lang 注意。
 28. zebraw 消除 hline 干扰：`table.hline(y: ..., stroke: 0pt)`。
+
 
 == 图形 / 页面
 
@@ -79,12 +85,14 @@
 33. PDF 插入失败：个例 PDF 格式问题，转格式解决。
 34. 横排纸张：`#set page(flipped: true)`（有人拼错 filpped）。
 
+
 == show 规则 / 作用域
 
 35. #strong[layout did not converge / states 自更新]：pinit 包问题；show 开关用 state 更新不收敛 → 自己写函数包一层 / 0.15 用 within（selector.within）。revoke show rule 仍在 roadmap。
 36. show regex("\n+") 疑与 353 页后 PDF grouping depth exceeded 有关（max-pdf-grouping-depth 论坛帖）。
 37. `#show heading.where(level:3): it => "(" + it.body + ")"`（heading 变形）。
 38. figure 收集 image 路径：show image 拿 it.path 是相对路径字符串，最新 commit 需 `image(path(...))` 才有 Path 对象（bundle 收集 asset 场景）。
+
 
 == 字体
 
@@ -94,6 +102,7 @@
 42. 可变字体：0.15 dev 支持（text(weight: n*100) 无级渐变）；web app VF 字体优先。图（截图 e88670c5 未包含在本地资源中）
 43. 缺字体报错处理：装字体或改模板定义（ctrl+click 跳转定义处）。
 
+
 == 参考文献
 
 44. hayagriva bib 非法 editortype：转 yaml 时报 PersonRole::Unknown cannot be serialized（不报错生成列表）。
@@ -101,6 +110,7 @@
 46. 多 bib：0.15 原生 multi-bib（一个文档多个 bibliography）。
 47. citrus 包 CSL 引号→书名号问题。
 48. bib school 字段：CSL publisher := bib publisher 或回落 institution/school；PR hayagriva#484 等。
+
 
 == 工具链 / 其他
 
@@ -122,11 +132,13 @@
 64. obsidian typst mate 中文方块：字体路径问题 issue#46。
 65. 高考试卷排版热：ezexam 包（密封线）；Charlie 排 2026 新高考 I/II 卷。
 
+
 #pagebreak()
 
 = 第二部分　群聊精选（2026-06-17 ~ 06-24）
 
 == 行距与基线（排版原理类）
+
 
 66. #strong[leading 的真实语义]：`set par(leading)` 是"上一行 bottom-edge 到下一行 top-edge"的距离，不是基线间距。文字盒上下边缘由字体 metrics 决定，中西文混排时同一行盒高度不同 → 行距看起来被"挤压"。想直接控制基线间距：`#set text(top-edge: "baseline")`，此后 leading 即基线距。（问答：中文行距忽大忽小）
 67. #strong[稿纸/格线效果配方]（seq 268591）：让每行盒高度固定为 step，行与行之间也留 step，即可与背景 tiling 横线严格对齐：
@@ -139,7 +151,9 @@
 68. #strong[tiling 渲染一致性坑]：tiling(pattern) 背景格线与 grid stroke 在 tinymist web 预览中高度对不齐，但本地 PDF/PNG 导出一致；同一 PDF 在不同阅读器（Chrome/Edge/Sumatra）下 pattern 填充行为也不同。结论：#strong[需要精确对齐的场景不要用 tiling]，改用 `place(..., grid(...))` 手动画线。导 PNG 分别用 PPI 280/290/300 可复现差异。（图：（该效果截图未包含在本地资源中） 未落盘，文字描述即可）
 69. #strong[可变字体（VF）导出回归（0.15 已知坑）]：思源黑体 Source Han Sans SC 的 VF ttf/ttc 会导致 #strong[PNG/SVG 导出字形错乱（PDF 正常）]；Noto Sans SC 正常。临时方案：删 VF 用 static otf。根因在 ttf-parser/harfbuzz 对 VF 的处理；修复方向：移除 ttf-parser 换 skrifa（typst.ts PR#858）；tinymist issue#2585。
 
+
 == 盒模型 / 布局技巧
+
 
 70. #strong["邪修"嵌套盒左列填充]（图 （截图 f5d99d8f 未包含在本地资源中） + （截图 8797fa26 未包含在本地资源中））：想让 box 内黄色左块撑满整行高度，用超大 outset 把视觉盒"推出去"再靠外层 clip 裁回：
 ```typ
@@ -156,7 +170,9 @@
 原理：`outset: (y: 999em)` 让黄色盒的绘制范围纵向超出父盒，父盒 `clip: true` 裁剪 → 视觉上左列填满。
 71. #strong[小盒对齐基线（0.15 pr8150）]：math box 现在带 baseline 参数，fletcher 流程图的分数线可与节点基线对齐。实现：零宽 box 两次 measure 求偏移。
 
+
 == 数学排版专题
+
 
 72. #strong[lrcases 手写方案]（图 （截图 7363bf29 未包含在本地资源中））：左花括号右对齐的 cases：
 ```typ
@@ -183,7 +199,9 @@
 80. #strong[0.15 内置 NCM 字体升级改 ∅ 形状]（#7597→7.1.0、pr8435→8.1.0）：`\emptyset` 默认从斜穿变圆零。恢复斜穿：`$emptyset.zero$` 或 `set text(features: ("cv02",))`。（图 （截图 94b999d1 未包含在本地资源中））
 81. typst 二进制内置 Libertinus + New Computer Modern（约 19.7MB），无需装字体即可用 `$calc$` 等。
 
+
 == 语言 / 数据结构讨论
+
 
 82. #strong[数组、字典都能解构，pair 不能]：`#let (x, y) = (1, 2)`；dict 也行：`let (width, height) = measure[114514]`（按 key 顺序取值是 array 语义——实际是对 dict.items 顺序解构）。pair 只能 `.x`/`.y` 或 `.0`/`.1`。
 83. #strong[参数默认值合并惯用法]（图 （截图 2be86420 未包含在本地资源中））：spread 合并：`let default = (left: 1em, ...); (:..default, ..input)`；或 dict `+` 运算符（浅合并）。递归合并官方没有，需自己写函数。
@@ -219,7 +237,9 @@
 
 89. 用法汇总：`/typtyp ⟨文档⟩`（typst 语法高亮）、`/typ ⟨文档⟩`（按内容自动伸缩页面）、`/typm ⟨数学⟩`、`/typ eval ⟨表达式⟩`（直接求值）、`/typdev`（dev 版编译）、`/typtyp fonts`（列字体）。默认中文字体 Noto Serif CJK SC。#strong[引用机器人消息]：被引用的消息内容存为 `re.typ` 可 `#import "re.typ": *` / include / read。行首 `!!⟨package⟩` 自动展开 `#import "@preview/⟨package⟩:最新版"`。误发代码可撤回，跟随撤回渲染结果。→ 这是群里"代码-效果图"对偶的来源。
 
+
 == 工具链 / 生态
+
 
 90. `typst watch` 自动重编译；#strong[调试]：官方无 debugger，社区用 `panic()` 顶替打印中间值 + 实时预览观察。
 91. #strong[tinymist]：`pinMain` 配置（多个 include 候选时报错让选）；preview 点击跳源码（PR#2055）；补全后 delete 行为 issue#2514；webview 渲染大文档卡顿（SVG vs canvas 之争、DOM tree 压力；拖成独立窗口可缓解）；lockfile 依赖锁定；shiroa 新版支持 `--input`。
@@ -228,16 +248,20 @@
 94. 生态新包：#strong[conjak]（农历/干支/节气日期包）；#strong[typsium 0.3.2]（化学式，`#ce` 新语法支持 `^(2+)` 或 content 写法）；merman（mermaid）；column-major grid（转置表格，files 目录有 column-major-table.typ）；velyst（bevy 动画嵌入）；InkyCap（tauri + obsidian 式编辑器）；text-shadow 方案（guide FAQ + SVG feDropShadow：typst.app/project/rloneBy3UYs3pJIkO8t5t3）；heading 悬挂缩进多行对齐（gap.zhtyp.art/\#heading-hanging-indent + issue#6527）。
 95. 解构效果验证图：（该效果截图未包含在本地资源中）（dict 解构 `let (width, height) = measure[...]` 的 FAQ 渲染截图）。
 
+
 == 可嵌入资源（本轮核实存在）
+
 
 - 全部图片路径已 grep 核实于 <图片资源目录>\（311 个文件），上列 hash 均匹配。
 - resources\files\ 值得检查：`3de2345755ed8e1903f8a75fc5f52d43_column-major-table.typ`、`4bff643b117334f202a37b69f4501bdb_讲义模板.typ`、`a8a110517f3d513d162130fe8b6b33aa_tennis-parabola.typ`、`3790ca520ca0827e8bcc598eb6a9feb6_curve.typ`。
+
 
 #pagebreak()
 
 = 第三部分　群聊精选（2026-06-24 ~ 06-27）
 
 == 数学排版
+
 
 96. #strong[多字母数学量必须用引号]：Typst 数学模式下连续字母会被当作多个单字母变量相乘（`amount` = `a m o u n t`），要写成一个量需加引号 `$ a m o u n t $`。群里讨论认为这符合写代码的人的直觉，且"归根结底多字母数学量不是好写法"（单字母才是规范写法）。
 
@@ -256,6 +280,7 @@ $
   #align(center)[#text(size: 8.5pt, fill: luma(140))[▲ 代码实测（本机 typst 渲染）]]
 ]
 
+
 98. #strong[中文括号里塞数学公式会很难看]：直接写 `（$lr(bar.v S bar.v)$）` 时中文括号与公式字体不搭。讨论结论是主要问题在定界符——大部分中文字体的英文字形做过特殊调整，而数学公式字体没有这种调整，两者放一起非常突兀。绕过办法：① 改用英文括号（`$(lr(bar.v S bar.v))$`）；② 用 `show` 把中文括号替换成英文/智能引号（有人用同样的 `show` 大法解决了中文 `""` 错位问题）；③ 用 LaTeX 同款字体。也有人指出 `replace` 在编辑器层面也能做，但对外部数据无效。
 ```typ
 （$lr(bar.v S bar.v)$）
@@ -270,6 +295,7 @@ $(lr(bar.v S bar.v))$
   #v(0.3em)
   #align(center)[#text(size: 8.5pt, fill: luma(140))[▲ 代码实测（本机 typst 渲染）]]
 ]
+
 
 99. #strong[数学字体风格选型讨论]：Times 风格本身没有良好定义（Times 经过多轮修改，衍生改进的都算）；Word 公式用的是 #strong[Cambria Math]，普通字符用 Word 英文/中文字体、数学与特殊字符用 Segoe UI Symbol；其他备选有 #strong[STIX Two]、#strong[texgyretermesmath]。吐槽：`libertinus math` "到处透露出半成品的样子"，`New Computer Modern` 太肥。
 
@@ -382,6 +408,7 @@ $
   #align(center)[#text(size: 8.5pt, fill: luma(140))[▲ 代码实测（本机 typst 渲染）]]
 ]
 
+
 104. #strong[MathML 输出不支持 `style="color"`]：截图显示 MathML 实际上支持 `style="color"` 属性，但 Typst 当前的 MathML 输出还没支持。
 
 105. #strong[数学作图库选型]：勾股定理这类证明图可以用 #strong[cetz] 画完再以 `image` 塞进 Typst；处理欧式几何（对标 `tkz-euclide`）推荐 #strong[ctz-euclide] `https://typst.app/universe/package/ctz-euclide`；画双曲线则连 `tkz-euclide` 都不方便，可考虑 asymptote。另有  被评价"这个库画图真好用啊"。#strong[q.uiver.app 已支持导出 Typst]（画交换图）。
@@ -390,7 +417,9 @@ $
 
 107. #strong[行内公式高度/深度与自动行距]：有人问 Typst 文档有没有记录过 inline equation 在高度/深度超过多少时开始自动调整行距——群里未给出结论（待查）。
 
+
 == 字体与文字样式
+
 
 108. #strong[能否在 Typst 内部传入"改过名字的字体"]：`font` 字段能传路径，于是有人想 `read` 字体 → 修改字体信息 → 传进去骗过检测系统。结论：#strong["能传路径的地方都能直接传 byte"]，但#strong[不能在 Typst 内部指定字体文件路径]——因为一个字体文件也可能包含多个字体，字体搜索跟文件不是一个概念。花活失败。（旁及相关项目：动态生成 plugin 的 C compiler 封装 `https://github.com/ParaN3xus/typst-xcc-wrapper`）
 
@@ -423,6 +452,7 @@ $
   #v(0.3em)
   #align(center)[#text(size: 8.5pt, fill: luma(140))[▲ 代码实测（本机 typst 渲染）]]
 ]
+
 
 114. #strong[伪加粗 cuti 的 stroke 取值]：用 cuti 做假的中文加粗时，`stroke: 0.01em` 是对比 Word 的黑体加粗得来的值；有人感觉 cuti 的粗体比 Word 粗一点。可用 PDF 编辑器查看实际 stroke 值核对。
 
@@ -468,17 +498,21 @@ $
 
     另有人问 SVG 里的 `<rect>` 有什么用——似乎删掉了也没问题。
 
+
 == 盒模型与布局
+
 
 116. #strong[`box` 的 `width`/`height` 与 `clip` 尺寸不一致（疑似版本行为变化）]：用外层 `box` 装照片、顶部对齐再 `clip` 裁掉多余高度时，画出 box 边框是正方形，但 `measure` 量出来的却是#strong[没裁切过的尺寸]——外层 box 的计算尺寸似乎跟内层取了个 `max`。旧版（0.14 时）正常，疑似顺手修的 bug：#strong[`clip` 说的是 hidden 而非 removed]。绕过办法：#strong[给外层 `box` 显式设置 `width`、`height` 就行]。对比写法：
 ```typ
 #box(width: 100pt, height: 100pt, clip: true, { set align(center + horizon) scale(100% / 1.5, body, reflow: true)})
 ```
 
+
 117. #strong[任意缩放内容到指定尺寸（`rescale`，cover 模式）]：用于"随意改变一个字的长宽比"等需求，官方文档参考 `https://typst.app/docs/reference/layout/scale/`。原代码来自 `https://github.com/vanleefxp/tessera_typ/blob/e583c5b24d6aa1bf81ccdbbba6278d8fba0cac71/src/_impl/transform.typ#L46-L97`（群友自述"我从注释那个 GitHub 链接里复制的"，另一人回"那应该就是我之前写的"）。
 ```typ
 #set page(height: auto, width: auto, margin: 1em)// https://github.com/vanleefxp/tessera_typ/blob/e583c5b24d6aa1bf81ccdbbba6278d8fba0cac71/src/_impl/transform.typ#L46-L97 #let rescale( body, width: auto, height: auto, fit: "cover", alignment: center + horizon,) = { if height == auto { panic("omitted") } else if width == auto { panic("omitted") } else { let (width: orig-width, height: orig-height) = measure(body) if fit == "stretch" { panic("omitted") } else { let width-scale-ratio = width / orig-width * 100% let h1 = width-scale-ratio * orig-height let scale-ratio = if h1 < height { height / orig-height * 100% } else { width-scale-ratio } box(clip: true, align(alignment, scale( box(body, width: orig-width, height: orig-height), scale-ratio, reflow: true, ))) } }}#let body = block(width: 200pt, height: 150pt, fill: orange, { set line(stroke: green + 10pt) place(line(start: (0%, 0%), end: (100%, 100%))) place(line(start: (0%, 100%), end: (100%, 0%))) place(line(start: (25%, 0%), end: (25%, 100%))) place(line(start: (0%, 75%), end: (100%, 75%)))})Lorem#context rescale(body, width: 100pt, height: 100pt)Lorem
 ```
+
 
 118. #strong[行距 `leading` 对数学公式盒高的诡异影响]：把 `text` 的 `top-edge`/`bottom-edge` 都设为 `"baseline"`、`par.leading` 分别设为 0pt / 6pt / 12pt 时，同一个内层 `box(height: 0pt)` 包 `$V$` 与 `$s=mat(1,I;I,1)$` 的表现不同。有人说 `align(bottom, ...)` 能解决但不知为什么；还有人抱怨"typst 是不是甚至没有办法测量一个 box 的基线到 bounds 的距离" → 答："去拆 context 和 content 就行了"。疑似 Typst bug（待确认）。
 ```typ
@@ -512,13 +546,16 @@ $
   #align(center)[#text(size: 8.5pt, fill: luma(140))[▲ 代码实测（本机 typst 渲染）]]
 ]
 
+
 119. #strong[`measure` 对数学公式不可靠 / ascender + descender ≠ height]：实测 `asc + desc` 不等于 `height`，且对数学公式"好像根本就不 work"（desc 和 asc 都等于 5pt）。旁人评价"像是 bug，可以提 issue"；提问人后来"找到了另一个方法"。
 
 120. #strong[`#set align(center)` 与 `align(center, ...)` 是等价的]：官方论坛明确答复 "Both variants are intended to be equivalent and unless you are manually parsing the content or something like that, there shouldn't be any difference." → https://forum.typst.app/t/is-there-any-difference-between-set-align-center-and-align-center/5666
 
 121. #strong[设置 `set` 的作用域]：`set` 本身没有作用域，但它外面的 `{…}` 有。（在排查页眉被污染问题时提出）
 
+
 == 表格
+
 
 122. #strong[列优先（column-major）表格需求]：默认 `table` 是从左往右、从上往下填充；有人想从上往下、从左往右填充，用来做细长表格（如 `x 1 2 3 4 5 6 7` / `f(x) 1 2 3 4 5 6 7` 这种自变量-函数值对应表）。三种方案：
     - #strong[先转置数据再扔进 `table`]：但这样就用不了 `table.header` 了，顶多用 `table.header` 的手工替代（`header` 不可替代的用途主要是换页时重复表头）；
@@ -563,7 +600,7 @@ $
 
 123. #strong[`table.header` 到底有什么用 / 为什么现在不能 `show table.header`]：讨论结论——如果表格不跨页、目标读者不用屏幕阅读器（比如准备印在纸上、不分发 PDF）、也不导出 html，那 `table.header` 确实没什么用；若要导出 html，`table.header` 里的东西会从 `<td>` 变成 `<th>`，默认样式不同，使用它就十分必要；等未来支持 `show table.header` 后，导出任意格式都能利用它批量设置样式，那时估计就没人再怀疑它了。有人吐槽"Typst 文档太强调 AT 和语义了，想要实现什么都先要考虑语义"。
 
-124. #strong[字典展开时后出现的键覆盖先出现的]：把 `..args.named()` 展开在函数参数里，若其中含 `columns`，则"手动指定的 `columns` 和 `args` 里的 `columns` 哪个在后面哪个生效"。官方依据（Dictionaries 文档）："✓They can also be spread into a function call or another dictionary with the `..`spread operator. In each case, if a key appears multiple times, the last value will override the others." https://typst.app/docs/reference/foundations/dictionary/
+124. #strong[字典展开时后出现的键覆盖先出现的]：把 `..args.named()` 展开在函数参数里，若其中含 `columns`，则"手动指定的 `columns` 和 `args` 里的 `columns` 哪个在后面哪个生效"。官方依据（Dictionaries 文档）："✓They can also be spread into a function call or another dictionary with the `..`spread operator. In each case, if a key appears multiple times, the last value will override the others." https://typst.app/docs/reference/foundations/dictionary/ 
 ```typ
 #let f(..args) = {
  table(
@@ -588,9 +625,12 @@ $
   #align(center)[#text(size: 8.5pt, fill: luma(140))[▲ 代码实测（本机 typst 渲染）]]
 ]
 
+
 125. #strong[符号表 / 三线表的手工画法]：用 `table.hline(y: …)` 配不同 stroke 画三线表，并用 `align: (horizon,) * 2` 让符号列与定义列垂直居中。完整代码见第 139 条末尾注释掉的 `#table(...)` 块（结构为 `columns: 2`、`rows: (auto, 2em)`、`stroke: none` + 三条 `table.hline(y: 0/1/7)`）。
 
+
 == 语言特性
+
 
 126. #strong[把 `100%` 这样的 ratio 变成字符串 `"100%"`]：`str()` 不能直接作用于 ratio（"ratio 好像不能用 str 函数"），原来的唯一办法是 `str(repr(100%))`。群友给出两种更干净的做法：
 ```typ
@@ -662,6 +702,7 @@ $
 ```typ
 #set page( height: 4em, width: 6em, header: grid[page #context counter(page).display()], margin: (top: 2em),)A#{ set grid(stroke: red) [B\ C\ ] pagebreak() [D\ E]}#pagebreak()F
 ```
+
 
 137. #strong[PDF 元数据 `CreateDate` 不考虑本地时区？]：有人提问"typst 在写入 pdf 元数据的 CreateDate 的时候，是不是没考虑本地时区"（未解答，待验证）。
 
@@ -798,6 +839,7 @@ $
 */
 ```
 
+
 140. #strong[代码块 figure 自动分页会留白 → `breakable: true`]：用 `figure` 包 zebraw 代码块时，如果前一页放不下，整块代码会被推到下一页、前一页空一大片。解决：`breakable: true`，或全局 `#show figure: set block(breakable: true)`。完整示例（`supplement: "例"` + `figure.caption(position: top)` 把标题放上方）：
 ```typ
 #let code-path = "src/introduction/data_reg/data_reg.sv"
@@ -824,11 +866,14 @@ $
 )<data_reg_module>
 ```
 
+
 141. #strong[zebraw 的 `line-range` 不支持跳行]：现在只能显示连续区间，想显示 1、4-11 行（跳过 2、3 行）#strong[做不到，除非自定义代码行显示]。API 改进建议：`line-range.flatten.sort.dedup`，这样是否包含右端点就可以用 `range(1, 100)` 的参数来控制。好看的代码块包推荐见 （该效果截图未包含在本地资源中） 与 （该效果截图未包含在本地资源中）；用 codly 时想去掉斑马条纹请自行看文档。
 
 142. #strong[typst.app 付费与本地/在线免费的关系]：不付费不影响本地或在线写 Typst；付费主要是扩网盘空间和一些小功能（"付费功能本身其实不太值，个人觉得适合当捐赠"）。相比 Overleaf 的优点是#strong[编译都在浏览器里，不会卡时间]；缺点是中文字体麻烦（"中文字体太麻烦了，不如本地"、"中文字体一多超级麻烦"），建议"不要太自定义，在 typst.app 自带的里面选一个"。VSCode 本地与 .app 渲染对比见 （该效果截图未包含在本地资源中） / （该效果截图未包含在本地资源中）。
 
+
 == 编号与引用 / 参考文献
+
 
 143. #strong[GB/T 7714 参考文献处理基准 gb7714-bench]：项目 `https://github.com/YDX-2147483647/gb7714-bench`、站点 `https://gb7714-bench.netlify.app/`，"把之前参考文献处理结果展示了出来……看起来什么妖魔鬼怪都有，很多区别也不算错，可能就没必要定量打分了"（（该效果截图未包含在本地资源中））。改进讨论：
     - #strong[结果展示应做预归一化]，去掉盘古之白、半角全角这些各家有自己偏好的东西；
@@ -896,7 +941,10 @@ $
 #pagebreak()
 ```
 
+
+
 == 图片与绘图
+
 
 148. #strong[zap 画电路图（CMOS 反相器）]：完整示例（PMOS/NMOS、电源地、与非门/或非门、lbuf/lnot 等）。遗留问题：右下角 nmos 元件怎么翻转、反相器竖着放时圈里会有一条竖线。注：#strong[zap 已从 GitHub 删库，转到了 Codeberg]。
 ```typ
@@ -937,6 +985,7 @@ $
 )<cmos_inverter1>
 ```
 
+
 149. #strong[blog 场景用 cetz 画图]：优点是与内容样式统一，"不像 mermaid 可能会有跟内容样式不一致的问题"（（该效果截图未包含在本地资源中））。
 
 150. #strong[用 Typst 写一整本书的实践]：`https://github.com/swiftczz/roots-affixes-book`（《词根词缀的故事》）。技术路线：#strong[主体仍是 Markdown，用 Python 解析 md 文档再生成 Typst 编译]；里面的 flowchart 渲染是自己搓的。
@@ -956,7 +1005,9 @@ $
 
 154. #strong[把 typ 转成 Word]：如果只是应付报告、不需要可编辑，完全可以贴图片。
 
+
 == 坑与 bug / 版本差异
+
 
 155. #strong[modern-nju-thesis 的 bib 会污染全局 grid，导致页眉歪掉]（（该效果截图未包含在本地资源中） （该效果截图未包含在本地资源中））：根因是 #strong[nju 的 `show grid.cell.where(x: 1)` 命中了页面的第一个元素]（不是页眉本身），所以歪了。#strong[如果这时候在正文中引用一次 `@key2020` 就可以恢复]，因为第一个元素变成了那个 ref。相比之下 #strong[elegant-culsc-record 没问题，是因为 `print-bib` 在 show 规则之前先自己设了一个 heading，这个 heading 成为第一个子元素，把页眉挡住了]。特征：只有一页也会这样（不是手动 pagebreak 触发），但#strong[后面的 `pagebreak` 也很重要]，见 #strong[https://github.com/typst/typst/issues/8631]。对照组复现代码：
 ```typ
@@ -994,6 +1045,7 @@ $
 #pagebreak()
 ```
 
+
 156. #strong[Typst watch / tinymist 爆内存（500 多页练习册）]：文档引用了 9 个 json（每个 500 道题），筛选逻辑叠了几层 `for` + `if`，至少 `for` 4500 次。讨论出的原因与对策：
     - #strong[typst watch 本身功能少、一般没那么吃内存]，但#strong[只要有变动它就渲染一次]，比如打字打一个字就自动跑渲染，#strong[渲染可以叠加导致爆掉]；
     - #strong[tinymist 即使不 preview 偶尔也会自动渲染]，与 typst watch 叠加更糟；
@@ -1014,7 +1066,9 @@ $
 
 163. #strong[双击 `.ttf.ttc` 后缀的疑惑]：官方下载下来确实可能是 `.ttf.ttc`（清华镜像 `https://mirrors.tuna.tsinghua.edu.cn/adobe-fonts/source-han-serif/Variable/OTC/`），"应该只是打包了"；从 git 仓库的 release 分支里能下载到 `ttf.ttc`，镜像站镜像的也是 release 分支，所以同样能下到 `otf.ttc`。
 
+
 == 工具链与生态包
+
 
 164. #strong[tinymist 下一代 preview（GPU）]：#strong[渲染时间控制在 \<5ms]，用 #strong[canvas + webgl]，走 #strong[vello gpu]（`https://github.com/linebender/vello`）。#strong[不会替换默认的 preview]（还在开发状态），预计 #strong[tinymist v0.15.4] 发布。已知短板：vello svg 对复杂 clip、filter 之类支持很糙（"之前 vello svg 是我写的，这几个部分处理的很糙"）。相关：SVG 的 clip 本来就能是任意 path。
 
@@ -1048,11 +1102,13 @@ $
     - 编号对齐"上面的正确、下面的出错"（（该效果截图未包含在本地资源中））——开了 list 编号居中，最初以为行为不一致，后来发现自己看错了，"上面那个确实也居中了"，是统一的居中行为。
     - 想把 typ 变成 Word：不需要可编辑完全可以贴图片。
 
+
 #pagebreak()
 
 = 第四部分　群聊精选（2026-06-27 ~ 07-01）
 
 == 绘图 / 渐变 / 曲线
+
 
 200. #strong[cetz 径向渐变水滴效果]（代码—效果）：用 `gradient.radial` + 参数曲线 `line(...)` 画水滴，`rotate(-90deg, reflow: true)` 旋转。是"颜色渲染做出类似水滴"的实现范例。（（该效果截图未包含在本地资源中））
 ```typ
@@ -1071,7 +1127,9 @@ $
 201. #strong[genealotree 遗传系谱图包]：`https://typst.app/universe/package/genealotree`，可加边更好读。（（该效果截图未包含在本地资源中））
 202. #strong[label → href 转换技巧]：发现可把 label 变成 href，用来生成 rss feed 或抽 str 塞进 `html.img`/`html.link`（"可能会稍微有点慢"）。（（该效果截图未包含在本地资源中） 同一处）
 
+
 == 数学排版
+
 
 203. #strong[`plus.minus` 符号]：`/typ $plus.minus$` 打出"上面+下面-"。（（该效果截图未包含在本地资源中））
 204. #strong[`math.cancel` 取消线]：`#set math.cancel(stroke: teal) $ cancel(x) $`，`#set math.cancel(background: true)` 加底色。0.15 已有。
@@ -1096,7 +1154,9 @@ $
 
 原写法 `#show strong: it => context { underline(text(fill: text.fill, it)) }` 的 `context` 是多余的。这是让 `#underline[ABC#strong[DEF]]` 里 strong 保持红色（与 underline 同色）的要点。（（该效果截图未包含在本地资源中））
 
+
 == 引用 / 交叉引用 / 大纲
+
 
 210. #strong[按 label 前缀给 ref 上色]（GitHub 风）：
 ```typ
@@ -1118,7 +1178,9 @@ $
 
 除多跑几次 numbering 外十分优雅。（（该效果截图未包含在本地资源中） #figure(image("../resources/images/757cc98e22389dfd4af369e8ae2c4182_{757CC98E-2238-9DFD-4AF3-69E8AE2C4182}.png", width: 78%), caption: [聊天中的效果截图])）
 
+
 == 标题编号 / counter
+
 
 213. #strong[获取当前标题编号]：`context counter(heading).get()` 返回各级编号的 array，本身没问题；萌新报错的真正原因在别处（不是 counter 调用错）。需与 `set heading(numbering: "1.")` 搭配。
 
@@ -1149,11 +1211,15 @@ $
 219. #strong[列平衡（dev / 0.16）]：`#set page(width: 300pt, height: auto) #rect(inset: 0pt, stroke: yellow, columns(3, balanced: true, lorem(40)))` 已在 main 分支支持，0.16 才稳定。（\[img:322\] 展示 dev 版 columns 平衡）
 220. #strong[自适应紧凑页面]：探针常用 `#set page(width: auto, height: auto, margin: 1em)` 让渲染结果刚好包住内容。
 
+
 == typst eval / 作用域
+
 
 221. #strong[`typst eval` 作用域]：第三方包函数不能凭空注入，必须 `import` 或传 `--scope`；否则报 scope 错误。`typst eval` 失败退出码 1（0.15 pr8623）。
 
+
 == 工具链 / 生态包
+
 
 222. #strong[海獭 haita 0.3.0-rc1]：纯 Typst HTML 文档工具，更新样式/字体/代码块显示，提供 Pagefind 支持，`https://github.com/wensimehrp/haita`。
 223. #strong[0.15 changelog 要点]：NCM 升 8.1.1 修复 calligraphic letterforms（pr8552，`@text.stylistic-set[stylistic set 6]`）；`math.lr` 内对齐点回归修复（pr8566）；`math.op` 垂直错位修复（pr8546）；多页 list `number-align`/`marker-align` 空隙 bug（pr8649）；PNG/SVG 多页错误仅最后一帧报（pr8618）；SVG inline pretty print（pr8535）；watch server Content-Type 扩展 json 等（pr8650）。
@@ -1162,11 +1228,15 @@ $
 226. #strong[绘图/公式包动态]：cetz 0.5.2（canvas/draw）、lilaq（公式绘图）、zebraw 0.6.3（代码块，长行折行待改进）、molchemist（分子结构式，支持 SMILES，但遮盖关系不行，想接入 typsium）、touying（slides，压测会不编译）。
 227. #strong[typst → 视频]：tanim / Candy（静态链接 typst+ffmpeg，x264 编码，帧间缓存+多线程，3.2K 60FPS 两分半跑通内存 6G，吊打 Manim）/ TOSS（pku-typst，纯前端）/ Janim（typst 结合）。
 
+
 == 中文字体 / 中文社区
+
 
 228. #strong[中文社区 FAQ 字体设置页]（typst-doc-cn/guide PR#180）：推荐思源宋体，链接 MirrorZ/CERNET 镜像；`typst fonts --variants` 会输出字体文件路径；删除"不支持可变字体"过时内容。本地用思源而非其它字体，因其它字体遇 cuti（粗体缺字重）、latin-in-cjk 问题。Noto CJK 在 typst.app 几乎唯一能直接用，其中宋体更常见。
 
+
 == 文献著录（GB/T 7714）深度专题
+
 
 229. #strong[多文献脚注拆分]：GB/T 7714 note 样式同一处引多篇应有多个脚注。omni 默认支持；依据 hayagriva#500。omni `footnote-ibid` 默认 `true`，设 `footnote-ibid: false` 复刻 2025 CSL；准备改成 `auto` 按 15/25 版本感知。
 230. #strong[多文献库包]：原生路由写法之外，社区有 alexandria、pergamon 两个多文献库包；omni-gb7714 已支持原生路由（0.14 仍可用）。
@@ -1177,21 +1247,27 @@ $
     - `_resolve-separator`：a. 句点去重按左末字符（`et al. West[M]` 不重复句点）；b. 软空格三类 hug 判定（左贴右标点或右贴左标点则不加空格，全角不额外空格）。
     - 与 biblatex 的 `\setunit` 缓冲机制（标点存 `\blx@unitpunct`，下个 `\printfield` 输出时才 flush，空字段则被覆盖）几乎同构。
 
+
 == WYSIWYG 编辑器 / 笔记软件
+
 
 233. #strong[tylina / tyx]：svg-based WYSIWYG 编辑器讨论。content 节点可编辑、text span 选中、上下箭头在可编辑 content 间切换；问题多（退格报错、白屏、跨文件跳转不行、backspace 误选全文、公式编辑框高度小）。仅工具介绍。
 234. #strong[InkyCap]（Codeberg 开源笔记软件，typst preview，未做 LSP 集成）；obsidian + tinymist 也是笔记方案。
 
+
 == 待补 / 未解
+
 
 235. #strong[汉字头顶注拼音]：群里未给出方案（"typst 咋注音来着" /taɪpst/），待后续补。fontfeatures 或 ruby 类包可能相关。
 236. #strong[Source Han Sans HC 疑似炸]（issue #8434 再现，与 c00#111 同因）：ttc 65536 字形 harfbuzz 溢出 → 字体读取失败，换 OTF/OTC。
+
 
 #pagebreak()
 
 = 第五部分　群聊精选（2026-07-01 前后）
 
 == 字体与上下标渲染（Inter super/sub 大案）
+
 
 300. #strong[Inter 字体 `#super[[123]]` 渲染异常的起因与初步排查]。现象：设置 Inter 字体后，纯数字上标 `#super[[123]]` 渲染奇怪（上标变小/错位），而 LaTeX 能正确渲染；且"只在纯数字情况下"异常。初步怀疑与字体自带的上标度量（sups）有关，参考 https://gap.zhtyp.art/\#mix-super-metric 。临时绕过：把 baseline、size 定死，不用字体提供的数据：
 ```typ
@@ -1226,6 +1302,7 @@ $
   #v(0.3em)
   #align(center)[#text(size: 8.5pt, fill: luma(140))[▲ 代码实测（本机 typst 渲染）]]
 ]
+
 
 304. #strong[用 OpenType features 直接测 subs 字形]：
 ```typ
@@ -1317,7 +1394,9 @@ A[
 
 311. #strong[竖排蒙古文]：群内提到 Typst 做竖排的困难，参考 https://devinz.org/mongolian-vs-chinese.html ；相关字体作者：吉日木图、にしがず（日本公司做蒙古文字体的缘由）。
 
+
 == 数学排版
+
 
 312. #strong[math 模式冒号间距像二元运算符的解法]：`colon` 和 `:` 在 math 里的间距都像"比例"运算符，想要文本冒号行为，用 `math.class("punctuation", ...)` 重设类别：
 ```typ
@@ -1359,9 +1438,12 @@ A":" B $
   #align(center)[#text(size: 8.5pt, fill: luma(140))[▲ 代码实测（本机 typst 渲染）]]
 ]
 
+
 313. #strong[cases 里分式太小]：不建议全局改，在需要的地方加 `display`（行内分式变小是同样机制）。官方 FAQ：https://typst.dev/guide/FAQ/dcases.html#如何让-cases-里面的分数-公式显示成-display-形式
 
+
 == 文本、断行与两端对齐
+
 
 314. #strong[行末破折号断行修复（PR 接力）]：经过中国人 Ri-Nai 和俄国人 sicikh 的接力 PR，行末破折号能正常用了：https://github.com/typst/typst/pull/7376 与 https://github.com/typst/typst/pull/8131 。测试代码（稳定版尚未包含修复，需 /typdev 开发版）：
 ```typ
@@ -1381,7 +1463,9 @@ A":" B $
 
 （效果：稳定版 ；开发版 typst version: main.2026-08-04.540db57 ）
 
+
 == 页面与版式
+
 
 315. #strong[A3 试卷双栏中间竖线]：不用 stroke，放页面背景上：
 ```typ
@@ -1395,11 +1479,14 @@ A":" B $
 )
 ```
 
+
 316. #strong[像素字体时刻表作品]：在线项目 https://typst.app/project/rHQxrdgQ3RL3a5dkm9cHQ8 。技巧：字体是 6x11 像素字体，字号设成 16mm 恰好 1px == 1mm；LED 圆点不用字体而用 curve 画出来盖在上面，以便控制每个圈的大小和形状。（群文件 \[file:test-timetable-3.pdf\]）
 
 317. #strong[radius: 50% 渲染异常（未解决 bug 现象）]：同一文档前 2 页正常、后 2 页出现图片未裁剪问题，`radius: 50%` 的结果不是圆形，"到了上面又变成圆的了"。（效果：（该效果截图未包含在本地资源中） （该效果截图未包含在本地资源中））疑似与增量编译/布局缓存相关的渲染不一致，群内未查明根因。
 
+
 == 语言特性（state / context / 函数）
+
 
 318. #strong[往 state 里存函数必须套一层]：新手问题——`state.update(red-answer)` 后 `state.get()` 拿到的不是原函数。根因（官方文档 https://typst.app/docs/reference/introspection/state/\#definitions-update ）：update 收到非函数值时直接设为该值；收到函数时，该函数会被当作"更新函数"，接收 state 的旧值并返回新值。所以想把函数本身存进 state，必须再包一层传给 update。原始复现代码：
 ```typ
@@ -1453,13 +1540,17 @@ A":" B $
 
 （效果：，"正常的黑色"说明直接 set fill 用 state.get() 在非 deferred context 下拿到的是 state 对象本身而非值）
 
+
 == 字典、参数与模板设计
+
 
 320. #strong[stroke 字典回退默认值的坑]：想实现"每个键：传入有则用传入的，否则回退到自定义 base-stroke，再否则 Typst 默认"。问题：`stroke: black+1pt` 这种写法会自动调用 stroke 构造函数，导致 thickness/paint 之外的键全是 Typst 默认值，无法区分 `.cap == auto` 是调用方显式传的字典键还是构造默认。结论：Typst 自带 element 函数不存在此问题，因为 auto 有 inherit（样式链继承）效果；cetz 的 draw 模块由 `set-style` 函数处理 inherit；最终把 cetz styles 里的内部函数 `_stroke-to-dict` 包一层（复制粘贴出来）解决。
 
 321. #strong[模板参数设计观点（有明确论点）]：模板开发者应尽量不列一堆参数让最终作者传（尤其 Typst 本来就有的参数）——编辑器里这些参数的文档、补全都很差，一个模板一套命名规则，且模板作者没精力测试所有参数组合。理想情况是模板只用 set 和 show set，最终作者在 `#show: template` 下面自己 set/show 定制。现实妥协：模板工程里甩一个全局字典配置，改参数直接改字典。注：`#show`/`#set` 只能作用于内置元素，开发者自定义函数做不到。
 
+
 == 列表与编号
+
 
 322. #strong[`+` 列表中间插 `#grid` 导致 enumerate 编号重置（显示 1, 1）]：
 ```typ
@@ -1500,13 +1591,18 @@ A":" B $
 = 犹可说也不可说也
 ```
 
+
+
 == 参考文献与 GB/T 7714
+
 
 325. #strong[omni-gb7714 v0.0.730 的国标对齐细节]：GB/T 7714 给的版次示例为 "ed"（不带缩写点），omni 对齐了国标原文；句点有去重逻辑（英文里句子以 etc.、a.m. 结尾时句号与缩写点合并）。为不完整文献加判定：omni 中一条文献按 block 渲染（block = 若干 field 组成的区块，如期刊文献的"年 期 卷 页"；连续出版物的起止区间用 serial-block 调用），若 block ≤ 1 则不显示末尾句点——对真实语料无负面影响，还能对上国标里大量不完整语料。基准测试看板：https://6a6b6c80d511a21bba639ec4--gb7714-bench.netlify.app 、https://6a6d65675920045f5bd0a0cf--gb7714-bench.netlify.app/diagram.pdf （效果：（该效果截图未包含在本地资源中） #figure(image("../resources/images/551bd9c139085df4596b4603b62fdf83_551BD9C139085DF4596B4603B62FDF83.jpg", width: 78%), caption: [聊天中的效果截图])）。omni 加了 JSON 支持后，better json 表现超过 lua 2025 csl-m（效果：（该效果截图未包含在本地资源中））。上游语料纠错渠道：https://www.github.com/zotero-chinese/styles/discussions/693
 
 326. #strong[GB/T 7714—2025 换版与勘误]：中国标网电子版换新版本，diff 用 https://soft.rubypdf.com/software/diffpdf 制作（\[file:diff.pdf\]、\[file:GB\_T 7714—2025《信息与文献 参考文献著录规则》-2026年夏勘误.pdf\]）。吐槽点：勘误中"糸"的旧字形竟然是贴的图片（方正书版做不到？）（效果：（该效果截图未包含在本地资源中））；弯引号改成直引号"反而更错了"（效果：#figure(image("../resources/images/ef708568de8a9d303994b6c17ee77b3e_EF708568DE8A9D303994B6C17EE77B3E.png", width: 78%), caption: [聊天中的效果截图])）；一字线原本符合国标标点用法（效果：#figure(image("../resources/images/214854a183e1bd603e05702434aced72_214854A183E1BD603E05702434ACED72.png", width: 78%), caption: [聊天中的效果截图])）。2025 版把 Revised 仍缩写为 Rev. 但末词不加缩写点，疑似"连续多个缩写词最末一词不加缩写点"（效果：（该效果截图未包含在本地资源中） 2025 / （该效果截图未包含在本地资源中） 2015 / （该效果截图未包含在本地资源中） 2005）。
 
+
 == 工具链与生态包
+
 
 327. #strong[tinymist 导出 bug（win10）]：路径下存在与 .typ 文件同名（不含后缀）的#strong[目录]时，导出失败并报错。（效果：（该效果截图未包含在本地资源中），目录结构 （该效果截图未包含在本地资源中））
 
@@ -1546,7 +1642,9 @@ Refer to README.txt for details.
 
 335. #strong[tinymist wysiwyg / Nodes mode 设计讨论]：渲染结果上直接编辑（类似公式编辑器的就地编辑）、侧边栏右下角节点模式、breadcrumb 显示"当前在哪个函数里"（应对 `#[xxx #[yyy #[zzz]]]]` 深层嵌套，可在编辑区顶部/光标旁显示）（效果：（该效果截图未包含在本地资源中） （该效果截图未包含在本地资源中））、右键加 open in code。现存问题：空 content argument 不让进入（单纯还没做）；浮层位置不稳定，"点了一下之后要找半天才能关掉"（效果：（该效果截图未包含在本地资源中））。
 
+
 == LaTeX → Typst 转换
+
 
 336. #strong[Rust 重写的增量 TeX 引擎实时翻译 demo]（效果：（该效果截图未包含在本地资源中））：与 mitex 做法不同——后台是完整的用 Rust 重写的增量 TeX 引擎（区别于 tug2026 那个"增量 latex"：后者只是渲染层局部增量、后台是常驻 luatex）。原理：在展开前注入语义标记、再走一遍节点列表把标记和文字配对，重建语义树交给 Typst 排版；因为展开是真的，用户宏和宏包代码可以直接正确处理，剩余工作量在 LaTeX 命令到 Typst 的映射上（正文主体可用，版式细节和 tikz 不行）。目前用 wasm 插件处理所以慢，直接 fork typst 源码会快很多。TeX 宏自动翻译的边界：简单宏（如 `\newcommand{\keyword}[1]{\textbf{#1}}` → `#strong[]`）可以，但 TeX 宏是 token 重写器不是函数，catcode、`\@ifnextchar` 前瞻、分隔参数、半展开等在 Typst 没有对应物，不存在通用自动翻译；更实际的用途是辅助校验人工移植的 Typst 模板与 LaTeX 原版包行为一致（差分预言机），且从展开后的语义树翻译时用户宏、\if、计数器都已展开。
 
@@ -1554,13 +1652,17 @@ Refer to README.txt for details.
 
 338. #strong[Typst 外部生成图片的需求讨论]：Typst 不支持像 LaTeX escape shell 那样调外部命令生成图片（可复现性/安全考虑），讨论过 deno 式权限控制（写文件/exec/网络）的可能性。现有绕过：套一层 make/shell/python 构建；prequery 包 https://typst.app/universe/package/prequery ；.Rtyp 文档里写 R 代码作图。持久化编译缓存："好像也有持久化 cache 的 issue，疑似说要做但没人管"——目前增量编译只限于一次 typst 执行之中，冷启动仍耗时，靠 tinymist 或 watch 缓解。
 
+
 == 绘图与曲线算法
+
 
 339. #strong[自适应采样平面参数曲线]：需求源于一条 GeoGebra `Curve(...)` 定义的复杂参数曲线，局部（尖点附近）需要极大采样密度，等距取样效果差（效果：（该效果截图未包含在本地资源中） （该效果截图未包含在本地资源中） （该效果截图未包含在本地资源中））。让 gemini 抄 GeoGebra 的 curve 实现效果仍差一点；建议方向：tupper 类基于区间算术的绘图算法（结论：区间算术更适合隐式曲线而非参数曲线，且输出是位图，每次编译重跑算法不划算，不如外部画好再引入）；或暴力 10 万个点 + Douglas-Peucker 抽稀。最终代码见 \[file:temp.typ\]、\[file:curve.typ\]（GPT 生成），效果 （该效果截图未包含在本地资源中）。
 
 340. #strong[图表标签避让算法讨论]：输入各标签文字和期望坐标，输出相互避让后的坐标。可行思路：bounding box 都是 AABB 时直接写 AABB 碰撞检测 + while 循环平移直到无冲突；SAT/AABB 只负责检测，避让靠平移。可参考移植 Python 的 https://pypi.org/project/adjusttext/ 或 https://pypi.org/project/textalloc/ ；高性能方案：Rust 插件里放 `HashMap<(u32, u32), Vec<AABB>>` 或 RTree。提出者最终选择手动调整（"覆盖复杂场景还是比较困难"）。
 
+
 == 图片与 PDF 兼容性
+
 
 341. #strong[插入知网 PDF 图片导致 Safari/苹果预览渲染错乱（完整排查记录）]：现象：Typst 导出 PDF 在 Safari、苹果预览、快速查看里乱掉（第二张图缩小叠到第一张上），其它阅读器（QQ、Foxit 之外）和导出 PNG 正常；LaTeX `\includegraphics[page=N]{image.pdf}` 同样出错 → 排除 Typst 实现问题，锁定 image.pdf 本身。进一步：单独插入任意一页都正常，从插入的第二张图开始才出错；给第一个 image 设 `height: 50%` 时第二个 image 打开瞬间会在正确位置闪现（否则固定在错误位置）。知网原版 PDF（CNKI\_ReaderEx 生成的 writer）就有问题；CAJ 转 PDF（https://www.dpdf.com/zh/caj-to-pdf ）依然不行。#strong[最终解法：ghostscript 重写 PDF]：
 ```typ
@@ -1577,7 +1679,9 @@ gs -o image.fixed.pdf -sDEVICE=pdfwrite -dPDFSETTINGS=/prepress image.pdf
 
 （运行时有一些警告，效果：，AI 解释  ）论坛帖：https://forum.typst.app/t/a-pdf-image-corrupts-the-pdf-output-in-ios-safari/9544 。原始 PDF 在 Safari 乱掉样例： ，相关文件 \[file:PDF图片乱掉.zip\] \[file:main.pdf\] \[file:CAJ2PDF.pdf\]。
 
+
 == 编译器机制杂记
+
 
 342. #strong[LLM 采样阶段接入增量编译器的可行性讨论]：设想让 LLM 在 token 抽样阶段就考虑 Typst 增量编译响应（mask 掉不合语法的 token）。反对意见：线性输出的文档任意截断不一定合法；一秒输出几十 token，编译器跟不上；JSON schema 有此类基础设施但 Typst 语法太复杂；token 采样在 GPU、Typst 编译在 CPU，数据位置造成困难。结论：不如让 LLM 直接接受编译器反馈（typst 编译很快，很现实）。相关论文：https://arxiv.org/html/2403.01632v1 、https://arxiv.org/html/2511.22277v2 。
 
@@ -1605,7 +1709,9 @@ gs -o image.fixed.pdf -sDEVICE=pdfwrite -dPDFSETTINGS=/prepress image.pdf
 354. #strong[wasm plugin 不支持多线程]：wasm 多线程提案尚未定；"无状态"指函数无副作用，不等于不能多线程（线程 join 有时间差）。经典多线程方案是在状态机里做线程管理，无状态时该方案不好实现。
 355. #strong[show 规则覆盖顺序陷阱]：后写的 show 会覆盖前面的。用户"例题号随一级标题自动计数 + 每章重置"卡住，根因是计数器更新被后续 show 覆盖，且 `context` 中 `counter(...).update` 会延迟到下次插入元素才生效（"第一次插入后才更新"是 expected）。
 
+
 == 编号 / 计数器
+
 
 356. #strong[例题号随一级标题自动计数 + 每章重置（完整可编译）]：
 ```typ
@@ -1626,12 +1732,16 @@ gs -o image.fixed.pdf -sDEVICE=pdfwrite -dPDFSETTINGS=/prepress image.pdf
 
 要点：读取标题号与例题号都放进 `context`；理解 update 的延迟效应。（#figure(image("../resources/images/2fc0df9d5d5d43301d7f52f63573ff18_2FC0DF9D5D5D43301D7F52F63573FF18.png", width: 78%), caption: [聊天中的效果截图])）
 
+
 == 脚注 / 尾注 / 版面
+
 
 357. #strong[脚注"跑上一页"是 known issue（争议两年）]：当前 typst 行为"摆前面引用下去，摆后面引用者上去"——脚注若对应下一页的引用，会出现"两页一个 1"。出版业规范：脚注与原文应同页；规避法是提前换行 / 略压缩行距 / 溢出版心（即"孤行控制"思想）。typst 目前无配置此规则的选项，issue 区未定论。旁注（放右侧）也是合理方案。
 358. #strong[超长脚注适合尾注]：汉语书超长脚注多为尾注改来；译注脚注 + 原书尾注常见于学术书。typst 不靠包实现尾注：把所有注释塞进一个文献条目的 `title` 用 `bibliography` 打印（"相信 typst 的脚本能力"）。
 
+
 == 排版 bug / 版本差异
+
 
 359. #strong[首行缩进被压缩（PR #8570，v0.15.1 修复）]：长文中某段 overfull，当"首行以左括号开头"时 `first-line-indent` 量被自动调小（未焊死），导致 overfull。减小括号周围绿色 space 宽度可缓解；PR #8570 把行首左括号左边缘固定到设定值，合并后消失。（#figure(image("../resources/images/2301727ad10739c0d9d84c96b0afcca3_2301727AD10739C0D9D84C96B0AFCCA3.jpg", width: 78%), caption: [聊天中的效果截图])）
 360. #strong[SVG 重影大坑（XML 实体）]：typst 输出 SVG 含 `<script>` 里的 `&nbsp;`，而 `&nbsp;` 不是合法 XML 实体，用 image/svg+xml 的 DOMParser 解析失败 → 隐藏文本层（`.tsel { color: transparent }`）样式丢失 → 文本层变黑与字形轮廓层叠成重影。根因：`&nbsp;` 非法 XML，应写 `&amp;nbsp;`。排查一晚。
@@ -1639,7 +1749,9 @@ gs -o image.fixed.pdf -sDEVICE=pdfwrite -dPDFSETTINGS=/prepress image.pdf
 362. #strong[表格/文本断行怪（Unicode 断行算法）]：如 `.bashrc` 文件清单断行异常，因 Unicode 断行算法不让在特定处换；相关 pr8750。可加 glob/zero-width 处理。
 363. #strong[等宽数学字体]：大写 L/H 作下标要等宽 → 用 Courier 等打字机字体（数学也有等宽的）。
 
+
 == 绘图 / 盒模型
+
 
 364. #strong[不等宽 stroke]：`box(stroke: (y: 0.5pt, x: 1pt), radius: 1em, inset: (y:0.3em,x:0.4em))` 可设不同方向不同线宽（"好邪恶"）。（#figure(image("../resources/images/15fe7cae241bcf6ec43649f7395b1100_15FE7CAE241BCF6EC43649F7395B1100.png", width: 78%), caption: [聊天中的效果截图])）
 365. #strong[stroke/fill 前景背景层]：typst 无专门控制谁是前景层；cetz 中实现"文字 stroke 在背景层"= 一个 content 画两遍（先背景层带 stroke，再前景层不带 stroke）。
@@ -1647,16 +1759,22 @@ gs -o image.fixed.pdf -sDEVICE=pdfwrite -dPDFSETTINGS=/prepress image.pdf
 367. #strong[organization / hierarchy chart 包]：typart 包的 `#tree`；或用 Fletcher 自搓。
 368. #strong[三线表]：typst-doc-cn FAQ 有 auto-three-line-table / three-line-table 页面，可用 show/set 把普通表转三线表。
 
+
 == 字体
+
 
 369. #strong[New Computer Modern 即 Typst 默认数学字体]：Typst 不会自动搜 TeX Live 字体，app 用需上传字体文件；本地要有字体。`#set text(font: "Computer Modern")` 需本机装了对应字体。
 370. #strong[汉字等宽字体 / 中文衬线术语]：maple mono cn、Noto Sans Mono CJK SC 等宽；中文排版讲"宋体/黑体"而非严格"衬线/无衬线"（楷体可 serif 可 sans）。
 
+
 == 文献 / bib
+
 
 371. #strong[bib 显示 `\textit` 异常]：从 zotero 导出的 bib 含 `\textit`（LaTeX 合法）在 typst `bibliography` 不识别（typst 写法不同）。解决：换不带 `\textit` 来源、正则 workaround、或在 bib 里直接写 typst 函数。字体效果像 ttc 问题（见 c00#111 / c01#236）。（#figure(image("../resources/images/45cdc34975736c0e59c37d9dec4734d7_45CDC34975736C0E59C37D9DEC4734D7.png", width: 78%), caption: [聊天中的效果截图])）
 
+
 == 工具链 / 生态包
+
 
 372. #strong[协作网站]：collabst（类 overleaf 的 typst 网站）；TeXlyre（评分更高）；北大 TOSS（纯前端 typst 写网站）。
 373. #strong[numblex + numbly 组合]：
@@ -1678,11 +1796,14 @@ gs -o image.fixed.pdf -sDEVICE=pdfwrite -dPDFSETTINGS=/prepress image.pdf
 378. #strong[讲义模板.typ]（群文件）：用户做例题号模板时参考；群里有成熟版本可借。
 379. #strong[faq\_bot 资源画像]：运行时 CPU 1%、内存 60%、8h、磁盘 85%（typst / typst-dev / 字体 / 包缓存）。
 
+
 == 其它
+
 
 380. #strong[typst 生成二维码]：blog.ensko.at/2026/08/11/typst-qr-codes/。
 381. #strong[RTL 网格]：`figure(text(dir: rtl, grid(columns: 3, gutter: 0.5em, ..range(6).map(n => [#n])))` 实现从右到左排布。
 382. #strong[LaTeX 吐槽梗]："除开编译慢、安装大、语法难、写作难、不直观、文档杂、管理散的缺点之外，总体质量还是很好的"——群内对 LaTeX 的经典调侃。
+
 
 #pagebreak()
 
@@ -1690,13 +1811,16 @@ gs -o image.fixed.pdf -sDEVICE=pdfwrite -dPDFSETTINGS=/prepress image.pdf
 
 == 字符 / 字体 / 颜色
 
+
 400. #strong[获取字符 unicode 名称]：typst 用专属名字，无内置 `ord` 式函数；有 package 查表（本质查表）。最快方法是直接查 unicode 表。
 401. #strong[彩色 emoji 显示]：`text` 默认填充黑色，导致 Noto #strong[Color] Emoji 预览空白，但导出 PDF 常能显示彩色（单色版则预览/PDF 都黑白）。结论：#strong[以导出 PDF 为准]；需本地装对字体文件（Color Emoji 矢量版在 vscode 预览不显，单色版可预览）。（\[img:待查\]）
 402. #strong[CMYK 颜色映射歪]：cmyk 经"转 rgb 再转回"会映射错位，疑似 bug（"已经是 cmyk 还歪"）。插件显示颜色与定义不符时优先怀疑颜色空间转换。
 403. #strong[数学字体不是普通字体]：`#show math.equation: it => text(style:"italic", font:("Times New Roman","KaiTi"), it)` 报 `current font is not designed for math`——Times New Roman 非数学字体。以假乱真 Times 用 #strong[TeX Gyre Termes Math] / #strong[STIX Two Math]。
 404. #strong[sym.angle 被 cetz 的 angle 模块遮蔽]（经典坑）：`angle.acute` 报 `type angle does not contain field 'acute'`，因为 cetz 包导出 `angle` 模块，`angle` 被识别为模块而非符号；正确写 `sym.angle.acute`，或 `#let angle = sym.angle`。`angle` 还是 typst 类型名，仅在文件作用域。"之前能编译"是因没 import cetz。（#figure(image("../resources/images/26680620d8a5f55fddf9f891c0aa40b6_26680620D8A5F55FDDF9F891C0AA40B6.png", width: 78%), caption: [聊天中的效果截图]) #figure(image("../resources/images/0010d18864a69d32c0ad917977b67a1e_0010D18864A69D32C0AD917977B67A1E.png", width: 78%), caption: [聊天中的效果截图])）补充 c00#74 的变体表。
 
+
 == 文字描边 / 阴影 / 行距
+
 
 405. #strong[stroke miter-limit / join 控制描边尖角]：`text(stroke: (thickness: .5em, miter-limit: 2))` 调锐角；`join: "round"` 圆角。字体描边也能改（不光曲线）。（\[img:待查\]）
 406. #strong[先 stroke 再 fill 的 hack（强制引用顺序等）]：`#let strk(it) = { box(width:0em, inset:(right:-1000em), text(stroke:(thickness:1.5pt, join:"round"), it)); box(it) }`——把描边层叠在底层。同思路可让"参考文献按指定顺序编号"：在前面先引用一遍（`#box(width:0em,...)[...] place hide` 之类 0 宽 0 高 hack）。
@@ -1704,7 +1828,9 @@ gs -o image.fixed.pdf -sDEVICE=pdfwrite -dPDFSETTINGS=/prepress image.pdf
 408. #strong[行距/文字外框超出]：`#set text(top-edge:"ascender", bottom-edge:"descender")` 防止中文/特定字体行框下方超出；外框计算与 leading 见 `typst.dev/guide/FAQ/par-leading.html`。（\[img:待查\]）
 409. #strong[baseline 顶点对位]：`#set text(bottom-edge:"descender", top-edge:"ascender")` + `box`/`circle` + `place(dx:, dy:)` 把小圆点精准落在「回」字绿框顶点（\[img:待查\] 问如何落点）。
 
+
 == 数学
+
 
 410. #strong[同余式 mod]：`$a equiv b (mod m)$` 需手动加空格；可包一层函数。
 
@@ -1741,7 +1867,9 @@ gs -o image.fixed.pdf -sDEVICE=pdfwrite -dPDFSETTINGS=/prepress image.pdf
 `note: "end"` 时尾注表在 `#bibliography` 调用处打印。（#figure(image("../resources/images/2514226eef9b11dc944cc0e7bafe7a6a_2514226EEF9B11DC944CC0E7BAFE7A6A.png", width: 78%), caption: [聊天中的效果截图]) #figure(image("../resources/images/def0c8c74a3f55f57fcf06368da004e5_DEF0C8C74A3F55F57FCF06368DA004E5.png", width: 78%), caption: [聊天中的效果截图]) #figure(image("../resources/images/5aaf9a0391f095d44b9195b07d2697a6_5AAF9A0391F095D44B9195B07D2697A6.png", width: 78%), caption: [聊天中的效果截图]) #figure(image("../resources/images/d84d11664ddafbe7adc01fb0a57b251e_D84D11664DDAFBE7ADC01FB0A57B251E.png", width: 78%), caption: [聊天中的效果截图]) #figure(image("../resources/images/c9e2ab326b72e220a5e93997883d32e5_C9E2AB326B72E220A5E93997883D32E5.png", width: 78%), caption: [聊天中的效果截图])）
 417. #strong[脚注带页码 `@key[p. 3]`]：原生 gb-7714-note 第一个 `p.3` 不显示（CSL 缺 locator 变量，需在 ibid 分支复制）；hayagriva#500 因 CSL 测试集与 citeproc.js 绑定而被屏蔽。p./pp. 单复数目前只能手动，或正则 hack 进自定义 bib 字段。（#figure(image("../resources/images/12caa4eafb468ad3afbe8b97ae88c7c5_12CAA4EAFB468AD3AFBE8B97AE88C7C5.png", width: 78%), caption: [聊天中的效果截图])）
 
+
 == 工具链 / 插件
+
 
 418. #strong[typst 内 "代码—效果" 对照（极简版 FAQ 机器人原理）]：
 ```typ
@@ -1764,7 +1892,9 @@ gs -o image.fixed.pdf -sDEVICE=pdfwrite -dPDFSETTINGS=/prepress image.pdf
 421. #strong[模板制作 = 会写函数 + return + show]：中文书籍模板群里有 modern-nju-thesis、uwnibook-color 等；"自己弄费时间，有人花个把月做模板肯定比我强"。
 422. #strong[隐水印 package 思路]：content → 渲染 png（需 typst-as-wasm-plugin）→ 高频处理 → png → page background；更务实是写构建文件（typstmk 之类）。
 
+
 == 语言陷阱 / AI 协作
+
 
 423. #strong[裸内容逃逸（raw content escape）]：AI 生成的右圆括号关闭 `#table`，后续内容被当普通文本裸输出（无报错）。防御：`#show ")": panic("...")`（但会搞乱其它）；本质是 AI 错误 + 标记语言二义。务实做法：让 AI 再扫一遍 / 人眼校 / formatter。`#{ ... }` 比直接写 `[]` 更安全。
 424. #strong[typst 代码块自动折行丢缩进]：PDF 阅读器复制/编译时自动折行把缩进丢了，Python 代码乱。务实：`show raw.where(block: true): set text(0.9em)`；折行行距应比普通小以便区分（#figure(image("../resources/images/aa38fe5be2321f26bf9371c349a31e6d_{AA38FE5B-E232-1F26-BF93-71C349A31E6D}.jpg", width: 78%), caption: [聊天中的效果截图]) #figure(image("../resources/images/0c1afe70d6b30eabc4b7897604c0c1d4_0C1AFE70D6B30EABC4B7897604C0C1D4.png", width: 78%), caption: [聊天中的效果截图])）。不同阅读器（UPDF/Edge/Firefox）行为不一。

@@ -14,7 +14,7 @@
     subtitle: [],
     author: [孟祥瑞, 高冰鑫, 汤皓亮],
     institution: [上海师范大学数理学院],
-    header: [ #set text(size:25pt)
+    header: [ #set text(size:25pt) 
     @XAJD201706002 王首元. 圣彼得堡悖论新解——比例效用理论溯源经典]
   )
 )
@@ -28,7 +28,7 @@
 ]
 ==  期望收益
 计算该游戏的期望收益:
-$
+$ 
   bb(E) = sum_(n=1)^infinity (1/2)^n dot 2^(n-1) = sum_(n=1)^infinity 1 /2= infinity
 $
 因此,按照期望收益理论,任何一个理性的游戏者都应该愿意支付任意高的金额来参与这个游戏.
@@ -40,31 +40,30 @@ $
 == 自然对数效用
 
 丹尼尔·伯努利提出的反比例法则认为：个人的比例效用增量是财富变化量与个人初始财富数量的比值,即预想比例(PRU)效用:
-$
+$ 
   text("PRU")_(W -> W + Delta W) = (Delta W)/W
 $
 如果人们足够细心地评价增量财富的每一个微小变化，那么财富由初始
 
 $W$ 变化到 $W + Delta W$ 时的效用增量为:
-$
-  text("PRU")_(W -> W + Delta W) = integral_(W)^(W + Delta W) (1/x) dif x = ln(W + Delta W) - ln(W) =
-    ln((W + Delta W)/W)
+$ 
+  text("PRU")_(W -> W + Delta W) = integral_(W)^(W + Delta W) (1/x) dif x = ln(W + Delta W) - ln(W) = ln((W + Delta W)/W)
 $
 此时,圣彼得堡游戏的自然对数期望效用(NLU)为:
 #v(-1em)
-$
+$ 
   text("NLU")_(W -> (2^(n-1),(1/2)^n))= sum_(n=1)^infinity (1/2)^n dot ln((2^(n-1))/W) < infinity
 $
 
 == 比例效用
 伯努利的自然对数效用过于理想化,因为它假设人们能够细心地评价增量财富的每一个微小变化,但在现实中,效用应该是离散的,即:
-$
+$ 
   text("PRU")_(W -> W + Delta W) = (Delta W)/W
 $
 这一形式的问题是, $Delta u$是关于$Delta W$的线性函数,这不符合财富增加时边际效用递减的规律.
 
 托德亨特提出应该使用财富变化量和最终财富的比值来计算效用(真实比例效用),即:
-$
+$ 
   text("ARU")_(W -> W + Delta W) = (Delta W)/(W + Delta W)
 $
 == 效用函数的图像
@@ -74,14 +73,12 @@ $
 == 效用函数的性质
 根据NLU和ARU具有以下性质:
 - 边际效用递减:
-$
-  text("ARU")_(W -> W + Delta W) = (Delta W)/(W + Delta W) > (Delta W)/ (W + Delta W' + Delta W) =
-    text("ARU")_(W + Delta W' -> W + Delta W' + Delta W)
+$ 
+  text("ARU")_(W -> W + Delta W) = (Delta W)/(W + Delta W) > (Delta W)/ (W + Delta W' + Delta W) = text("ARU")_(W + Delta W' -> W + Delta W' + Delta W)
 $
 - 损失厌恶
-$
-abs(text("ARU")_(W -> W - Delta W)) = abs((-Delta W)/(W - Delta W)) > (Delta W)/(W + Delta W) =
-  text("ARU")_(W -> W + Delta W)
+$ 
+abs(text("ARU")_(W -> W - Delta W)) = abs((-Delta W)/(W - Delta W)) > (Delta W)/(W + Delta W) = text("ARU")_(W -> W + Delta W)
 $
 - ARU上限为1下限为$-infinity$,
 - NLU上限为$infinity$下限为$-infinity$.
@@ -106,7 +103,7 @@ text("ARU")_(W -> (W -P_(text("AR")) + x_i,p_i)) = 0
 text("NLU")_(W -> (W -P_(text("N L")) + x_i,p_i)) = 0
 $
 == 风险溢价
-$
+$ 
 text("ARU")_(W -> (W -P_(text("AR")) + x_i,p_i)) = 0
 $
 $
@@ -117,7 +114,7 @@ $
 $
 
 $
-1/W = bb(E)(1/(W - P_(text("AR"))+x_i)) >= 1/(W - P_(text("AR"))+bb(E)(x_i))
+1/W = bb(E)(1/(W - P_(text("AR"))+x_i)) >= 1/(W - P_(text("AR"))+bb(E)(x_i)) 
 $
 
 $
@@ -129,14 +126,13 @@ $
 $
 (dif P_(text("AR")))/(dif W) = -(partial text("ARU")\/ partial W)/(partial text("ARU")\/ partial P_(text("AR"))) > 0
 $
-$
+$ 
 (dif P_(text("N L")))/(dif W) = -(partial text("NLU")\/ partial W)/(partial text("NLU")\/ partial P_(text("N L"))) > 0
 $
 这解释了为什么富人投资风险资产的意愿更强.
 
 == 独立投资评估
-当投资者独立评估某项风险资产时，比较理性的选择是即将其他资产与该投资进行隔离。例如，当决策者有初始财富$W$，为风险资产$(x_i,p_i)$的报价为$P$时，从独立评估的角度而言，剩余财富$W -
-  P$与该风险资产无关。因而，独立评估风险资产时,报价等于初始财富额，以$P_(text("AR"))$与$P_(text("N L"))$表示独立评估风险资产时的报价上限，如下所示：
+当投资者独立评估某项风险资产时，比较理性的选择是即将其他资产与该投资进行隔离。例如，当决策者有初始财富$W$，为风险资产$(x_i,p_i)$的报价为$P$时，从独立评估的角度而言，剩余财富$W - P$与该风险资产无关。因而，独立评估风险资产时,报价等于初始财富额，以$P_(text("AR"))$与$P_(text("N L"))$表示独立评估风险资产时的报价上限，如下所示：
 $
 text("ARU")_(P_(text("AR")) -> (x_i,p_i)) = 0
 ,quad
@@ -155,3 +151,4 @@ $
 
 #pagebreak()
 #bibliography("bib/IEEE Xplore Citation BibTeX Download 2026.3.8.20.9.42.bib")
+

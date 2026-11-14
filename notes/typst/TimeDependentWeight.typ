@@ -30,9 +30,7 @@
 == 相关工作
 标准的时空 PINNs 将时间作为输入，但在所有时刻复用权重共享的单一网络，这就迫使同一组特征去表征差异显著的动力学行为。这种强耦合会降低精度，且在同时施加偏微分方程约束、边界约束与初始约束时，可能导致训练不稳定.
 
-@dai2026tinnstimeinducedneuralnetworks
-  文提出了TINNs架构，它将网络权重参数化为时间的学习函数，使得有效的空间表征能够随时间演化，同时保留共享的结构。该文在多种含时偏微分方程上的实验表明：与 PINN 及其他强基线方法相比，TINN 的精度最高提升 4
-  倍，收敛速度最高加快 10 倍.
+@dai2026tinnstimeinducedneuralnetworks 文提出了TINNs架构，它将网络权重参数化为时间的学习函数，使得有效的空间表征能够随时间演化，同时保留共享的结构。该文在多种含时偏微分方程上的实验表明：与 PINN 及其他强基线方法相比，TINN 的精度最高提升 4 倍，收敛速度最高加快 10 倍.
 
 TINNs 的核心思想，是把PINNs的网络$u_theta (bold(x),t)$变为$u_theta(t) (bold(x))$，使得时间不进入网络输入，只进入参数空间.
 
@@ -41,8 +39,7 @@ TINNs 的核心思想，是把PINNs的网络$u_theta (bold(x),t)$变为$u_theta(
 $ u_theta (bold(x)) = bf(W)_L sigma(bf(W)_(L-1)sigma(... sigma(bf(W)_1 bold(x) +bf(b)_1))+bf(b)_(L-1)) + bf(b)_L$
 
 其中$bold(theta)(t) = {(bf(W)_cal(l),bf(b)_cal(l))}_(cal(l)=1)^L $.
-$bf(W)_cal(l) in bb(R)^(l_(cal(l)) times l_(cal(l-1))),bf(b)_cal(l) in bb(R)^(l_(cal(l)))$,依赖 $t$ ,
-  $l_0$为输入层(空间)维度.总参数量为:
+$bf(W)_cal(l) in bb(R)^(l_(cal(l)) times l_(cal(l-1))),bf(b)_cal(l) in bb(R)^(l_(cal(l)))$,依赖 $t$ , $l_0$为输入层(空间)维度.总参数量为:
 
 $ N_D = sum_(cal(l)=1)^L (l_(cal(l)) l_(cal(l-1)) + l_(cal(l))) $
 
@@ -65,6 +62,7 @@ $ bold(Phi) (t) = (bold(1-alpha))t +bold(alpha dot.o)  bold(cal(N))(t) in bb(R)^
 $bold(alpha) in bb(R)^(2L) $,为可学习参数,
 $bold(Phi)(t) = (Phi_1 (t),Phi_2 (t),...,Phi_(2L) (t))^top$.
 
+
 $ bf(W)_i = Phi(t)_(2i-1) dot bf(A)_(2i-1)+ bf(B)_(2i-1)\
 bf(b)_i = Phi(t)_(2i) dot bf(A)_(2i)+ bf(B)_(2i)
 $
@@ -72,6 +70,7 @@ $
 此外，我们预计残差形式
 $ bold(Phi) (t) = t + bold(cal(N))(t) $
 也能达到效果.
+
 
 == 启发性实验
 
@@ -82,7 +81,7 @@ $ bold(Phi) (t) = t + bold(cal(N))(t) $
 
 边界条件: $u(0, t) = u(1, t) = 0$
 
-PINN架构:
+PINN架构: 
 输入层: 输入$vec(x,t)$,然后经过$W_text("in") in bb(R)^(2 times h)$.
 
 使用2个残差块,每个残差块内部计算公式为：
@@ -95,8 +94,7 @@ t-parametered PINN中, $W_0$和$W_1$被设计为时间依赖的权重，即$W_0(
 
 训练:
 
-由于t-parametered PINN需要根据t决定权重，我们使用累积梯度方法.每个epoch内，使用Latin Hypercube Sampling 在时间域采样4个随机时间点.每个时间点采样128个随机空间点，再加上$4
-  times 2$个边界条件点，初始$t=0$采样256个点计算initial Loss，8个边界条件点参与计算boundary Loss.
+由于t-parametered PINN需要根据t决定权重，我们使用累积梯度方法.每个epoch内，使用Latin Hypercube Sampling 在时间域采样4个随机时间点.每个时间点采样128个随机空间点，再加上$4 times 2$个边界条件点，初始$t=0$采样256个点计算initial Loss，8个边界条件点参与计算boundary Loss.
 
 普通PINN则直接在整个空间时间域内采样$4 times 128$个随机点计算pde Loss,再加上$128$个边界条件点计算boundary Loss,以及$256$个初始条件点计算initial Loss.
 
