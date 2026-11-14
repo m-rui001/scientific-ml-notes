@@ -19,7 +19,7 @@
   )
 )
 
-== 交叉注意力的计算原理@feng2025overcomingspectralbiascrossattention 
+== 交叉注意力的计算原理@feng2025overcomingspectralbiascrossattention
 假设我们已有一个简化的傅里叶特征库:
 $
   H(x) in bb(R)^(n times d) quad text("where") quad n=M/d
@@ -51,8 +51,6 @@ content((-2,1.4), [$dots.v$])
 content((-2,1), [$dots.v$])
 content((-2,0.6), [$dots.v$])
 content((-2,0), [$s_n$])
-
-
 
 content((1.5,1.4), [$dots.v$])
 content((1.5,1), [$dots.v$])
@@ -88,7 +86,8 @@ content((6.5,1.5), [$text("CA")(x)$])
 具体如下:
 
 $bold(x) in bb(R)^(d_text("in")
-),quad text("FFN")_1(bold(x))=Q in bb(R)^(h), quad W_(mu)in bb(R)^(n times h),\ b_(mu) in bb(R)^(h),quad W_sigma in bb(R)^(n times h),quad b_sigma in bb(R)^(h),quad Omega in bb(R)^(n times d) $
+),quad text("FFN")_1(bold(x))=Q in bb(R)^(h), quad W_(mu)in bb(R)^(n times h),\ b_(mu) in bb(R)^(h),quad W_sigma
+  in bb(R)^(n times h),quad b_sigma in bb(R)^(h),quad Omega in bb(R)^(n times d) $
 
 下面为了简化，假设 $d_text("in") = 1$,从而频率 $omega$ 都是一维的.
 
@@ -116,10 +115,15 @@ H in bb(R)^(n times d). $
 下面考虑高维的情况：
 
 取傅里叶特征频率为网格点(未必是均匀网格)，\
-${bold(omega)_i = (omega_1, dots, omega_d_text("in"))|i=1,dots,n_1 times n_2 times ... times n_d}$,取$d$整除$n_d$，在划分token时使每个token内的频率除了最后一维的频率不同以外，其他维度的频率都相同，得到:
-$Omega=mat(bold(omega)_1, dots, bold(omega)_(d); dots.v,dots,dots.v; dots, dots , bold(omega)_(n d)) in bb(R)^(n times d)$.
+${bold(omega)_i = (omega_1, dots, omega_d_text("in"))|i=1,dots,n_1 times n_2 times ... times
+  n_d}$,取$d$整除$n_d$，在划分token时使每个token内的频率除了最后一维的频率不同以外，其他维度的频率都相同，得到:
+$Omega=mat(bold(omega)_1, dots, bold(omega)_(d); dots.v,dots,dots.v; dots, dots , bold(omega)_(n d)) in
+  bb(R)^(n times d)$.
 
-将上文的$G = Omega $修改为$G =mat(bold(omega)_1[-1], dots ,bold(omega)_(d)[-1]; dots.v,dots,dots.v;dots,dots,bold(omega)_(n d)[-1]) $,同一token内前面的频率相同,各个特征间的距离只和最后一个维度有关.
+将上文的$G =
+  Omega
+  $修改为$G =mat(bold(omega)_1[-1], dots ,bold(omega)_(d)[-1]; dots.v,dots,dots.v;dots,dots,bold(omega)_(n d)[-1])
+  $,同一token内前面的频率相同,各个特征间的距离只和最后一个维度有关.
 
 得到注意力输出结果后，再通过一个网络得到最终输出$text("FFN")_2(A)$.
 #pagebreak()
@@ -164,7 +168,6 @@ KAFF方法引入了较强的非线性，这和通常的网络设计中追求可�
 #image("assets/MMNNeg.pdf",height: 150pt)
 ]
 
-
 #columns(2)[
 
 #image("assets/LandscapeFCNN1Act1.pdf",height: 200pt)
@@ -176,8 +179,9 @@ KAFF方法引入了较强的非线性，这和通常的网络设计中追求可�
 == TINNs@dai2026tinnstimeinducedneuralnetworks
 标准的时空 PINNs 将时间作为输入，但在所有时刻复用权重共享的单一网络，这就迫使同一组特征去表征差异显著的动力学行为。这种强耦合会降低精度，且在同时施加偏微分方程约束、边界约束与初始约束时，可能导致训练不稳定.
 
-@dai2026tinnstimeinducedneuralnetworks 文提出了TINNs架构，它将网络权重参数化为时间的学习函数，使得有效的空间表征能够随时间演化，同时保留共享的结构。该文在多种含时偏微分方程上的实验表明：与 PINN 及其他强基线方法相比，TINN 的精度最高提升 4 倍，收敛速度最高加快 10 倍.
-
+@dai2026tinnstimeinducedneuralnetworks
+  文提出了TINNs架构，它将网络权重参数化为时间的学习函数，使得有效的空间表征能够随时间演化，同时保留共享的结构。该文在多种含时偏微分方程上的实验表明：与 PINN 及其他强基线方法相比，TINN 的精度最高提升 4
+  倍，收敛速度最高加快 10 倍.
 
 #align(center)[
   #image("assets/structure_comparison.pdf",height: 160pt)
@@ -190,10 +194,10 @@ TINNs 的核心思想，是把PINNs的网络$u_theta (bold(x),t)$变为$u_theta(
 $ u_theta (bold(x)) = bf(W)_L sigma(bf(W)_(L-1)sigma(... sigma(bf(W)_1 bold(x) +bf(b)_1))+bf(b)_(L-1)) + bf(b)_L$
 
 其中$bold(theta)(t) = {(bf(W)_cal(l),bf(b)_cal(l))}_(cal(l)=1)^L $.
-$bf(W)_cal(l) in bb(R)^(l_(cal(l)) times l_(cal(l-1))),bf(b)_cal(l) in bb(R)^(l_(cal(l)))$,依赖 $t$ , $l_0$为输入层(空间)维度.总参数量为:
+$bf(W)_cal(l) in bb(R)^(l_(cal(l)) times l_(cal(l-1))),bf(b)_cal(l) in bb(R)^(l_(cal(l)))$,依赖 $t$ ,
+  $l_0$为输入层(空间)维度.总参数量为:
 
 $ N_D = sum_(cal(l)=1)^L (l_(cal(l)) l_(cal(l-1)) + l_(cal(l))) $
-
 
 我们需要用 $t$ 生成这$N_D$个参数.
 #pagebreak()
@@ -217,12 +221,9 @@ $ bold(Phi) (t) = (bold(1-alpha))t +bold(alpha dot.o)  bold(cal(N))(t) in bb(R)^
 $bold(alpha) in bb(R)^(2L) $,为可学习参数,
 $bold(Phi)(t) = (Phi_1 (t),Phi_2 (t),...,Phi_(2L) (t))^top$.
 
-
 $ bf(W)_i = Phi(t)_(2i-1) dot bf(A)_(2i-1)+ bf(B)_(2i-1)\
 bf(b)_i = Phi(t)_(2i) dot bf(A)_(2i)+ bf(B)_(2i)
 $
-
-
 
 #pagebreak()
 
@@ -231,7 +232,8 @@ $
 主要方向如下：
 
 - 1 每层都嵌入所有物理坐标$(t, x_1, x_2, ..., x_d)$，
-与HyperPINN@belbuteperes2021hyperpinnlearningparameterizeddifferential 使用方程参数（如粘性系数）作为超网络的输入不同，用$(t,x_1, x_2, ..., x_d)$作为超网络的输入，让超网络生成 $bold(Phi) (t)$，然后把$Phi_i(t)$经过仿射变换得到一个参数矩阵.
+与HyperPINN@belbuteperes2021hyperpinnlearningparameterizeddifferential
+  使用方程参数（如粘性系数）作为超网络的输入不同，用$(t,x_1, x_2, ..., x_d)$作为超网络的输入，让超网络生成 $bold(Phi) (t)$，然后把$Phi_i(t)$经过仿射变换得到一个参数矩阵.
 
 - 2 分层嵌入坐标信息，例如在第$i$层输入$x_i$，物理意义更明确.
 

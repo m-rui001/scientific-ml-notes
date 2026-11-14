@@ -1,3 +1,7 @@
+(* Project Euler 题解集：第 11、14、15、16、17、18、21、23 题，部分题目保留多版本。
+   文件形态：纯 Wolfram Language 脚本，不是笔记本；分节写在注释里，可整体 Get，也可逐段粘贴求值。
+   整理说明（语料整理时生成，不是原作者注释）。 *)
+
 (* Project Euler 第11题：网格中最大乘积 *)
 
 Max@Flatten@{Map[Max, Map[Times @@@ Partition[#, 4, 1] &, {data, Transpose[data], Diagonal[data, #] & /@ Range[-16, 16],Diagonal[Reverse /@ data, #] & /@ Range[-16, 16]}, {2}], {2}]}

@@ -33,7 +33,7 @@
 
 我们认为神经网络的输出近似为真实解$u(x)$，我们使用七点中心差分计算二阶导数:
 $
-   u''_i approx (2u_(i-3) - 27u_(i-2) + 270u_(i-1) - 490u_i + 270u_(i+1) - 27u_(i+2) + 2u_(i+3)) / (180h^2) 
+   u''_i approx (2u_(i-3) - 27u_(i-2) + 270u_(i-1) - 490u_i + 270u_(i+1) - 27u_(i+2) + 2u_(i+3)) / (180h^2)
 $
 误差项为
 $(-h^6/560 u^((8))(xi))$
@@ -69,7 +69,9 @@ def diff_operator(self, X, model):
 ```
 输入 $bold(X) in bb(R)^(N times 2)$，输出$bold(u) in bb(R)^(N times 1)$,$bold(u)$关于$bold(X)_k$的雅可比矩阵为
 
-$cal(J) in bb(R)^(N times 1 times N times 1)$,$cal(J)_(i,1,j,1)=(partial bold(u)^((i)))/(partial bold(X)_(k)^((j)))$(省略k,并且认为$bold(u)=bold(u)_1$),
+$cal(J) in
+  bb(R)^(N times 1 times N times 1)$,$cal(J)_(i,1,j,1)=(partial bold(u)^((i)))/(partial
+  bold(X)_(k)^((j)))$(省略k,并且认为$bold(u)=bold(u)_1$),
 
 $bold(u)_(i,1)$仅与$bold(x)_(i,k)$有关.
 因此可以简化为
@@ -79,9 +81,10 @@ $
 $v=$torch.ones_like($U$) , $v in bb(R)^(N times 1)$,\
 则torch.autograd.grad(u,[x, y][i],grad_outputs=torch.ones_like(u)) 的计算过程为:
 $
-  bold(g)^((j)) = bold(v)^top dot cal(J)= sum_(i,1) bold(v)_(1)^((i)) dot cal(J)_(i,1,j,1) = sum_i 1 dot  cal(J)_(i,1,j,1) 
+  bold(g)^((j)) = bold(v)^top dot cal(J)= sum_(i,1) bold(v)_(1)^((i)) dot cal(J)_(i,1,j,1) =
+    sum_i 1 dot  cal(J)_(i,1,j,1)
   = (partial bold(u)^((j)))/(partial bold(X)_(k)^((j)))
-$ 
+$
 其中$k=1,2, quad j = 1,2 dots N$.
 
 $text("完整写出后")
@@ -93,13 +96,14 @@ dots.v,
 $
 
 $bold(g)_k in bb(R)^(N times 1)$ 对$bold(X)_k in bb(R)^(N times 1)$的雅可比矩阵为：
-$ cal(J)_(i,1,j,1)=cases((partial bold(g)_k^((i)))/(partial bold(X)_k^((j)))\, quad i=j , 
-0\, quad i!=j) 
+$ cal(J)_(i,1,j,1)=cases((partial bold(g)_k^((i)))/(partial bold(X)_k^((j)))\, quad i=j ,
+0\, quad i!=j)
 $
 
 则hess_ii的计算过程为:
 $
-  bold(h)_(k)^((j)) =bold(v)^top dot cal(J)= sum_(i) bold(v)^((i)) dot cal(J)_(i,1,j,1) = 1 dot cal(J)_(j,1,j,1) = (partial bold(g)_k)^((j))/(partial bold(X)_k^((j))) 
+  bold(h)_(k)^((j)) =bold(v)^top dot cal(J)= sum_(i) bold(v)^((i)) dot cal(J)_(i,1,j,1) = 1 dot cal(J)_(j,1,j,1) =
+    (partial bold(g)_k)^((j))/(partial bold(X)_k^((j)))
 $
 其中$k=1,2, quad j = 1,2 dots N$.
 #align(center)[
@@ -107,10 +111,11 @@ $- Delta u = - sum_(k=1)^2 bold(h)_k$
 ]
 #pagebreak()
 == 采样策略
-对于 $u=sin(50 x^2)+sin(50 y^2)$的回归任务， 
+对于 $u=sin(50 x^2)+sin(50 y^2)$的回归任务，
 当采样方式为固定的网格点时，模型能部分学习到高频信息，而当采样方式变为动态从全求解域完全随机采样,batch为整个采样得到的训练集时，模型输出一个随训练而震荡的平面。
 
-经过分析，这时由于对于任意一个随机batch的MSE Loss, 神经网络输出常数 $hat(u)=bb(E)(u_i)$ 时可以使Loss较小，而当该batch改变后, 模型仍然可以通过调整偏置项快速适应新的batch的均值，导致模型输出一个震荡的平面。
+经过分析，这时由于对于任意一个随机batch的MSE Loss, 神经网络输出常数 $hat(u)=bb(E)(u_i)$ 时可以使Loss较小，而当该batch改变后,
+  模型仍然可以通过调整偏置项快速适应新的batch的均值，导致模型输出一个震荡的平面。
 
 这本质上是由于，每次重采样都相当于改变了训练集，对于模型这也就成了另外一个回归任务，而目标$u$的频率过高，模型没有足够的能力在较短的epoch内学到可迁移到下一个batch的知识.
 == 该方法的不足
@@ -122,7 +127,8 @@ $omega_(text("base"))~cal(N)(0,sigma^(-2) bb(I))$中$sigma$的选取依赖先验
 === Cross Attention使得计算量激增
 加入Cross Attention后，同一任务的训练时间为原来的五倍以上。论文令RFF-CA和RFF-NN网络训练同样的epoch数比较性能，这是不公平的。
 
-pytorch有内置的MultiheadAttention模块，然而该模块中所有优化版本的注意力机制（Flash Attention 和 Memory Efficient Attention）都不支持高阶导数的计算，必须使用较慢的Math SDP。
+pytorch有内置的MultiheadAttention模块，然而该模块中所有优化版本的注意力机制（Flash Attention 和 Memory Efficient
+  Attention）都不支持高阶导数的计算，必须使用较慢的Math SDP。
 
 === 自适应性频率增强策略
 自适应性频率增强策略提取后验频率依赖对网络输出做DFT，这本身就依赖神经网络已经部分学到后验频率。其次该方法依赖人工区分哪些是已有频率，哪些是需要增强的频率，不够智能。
@@ -135,4 +141,5 @@ pytorch有内置的MultiheadAttention模块，然而该模块中所有优化版�
 
 论文中验证$alpha$设为可参数的有效性时，没有交代$alpha_text("opt")$的更新频率或$alpha_text("learnable")$的学习率.实验中发现$alpha$更新较快时，训练效果不好.
 === 超参数多
-除去PINN的超参数，加入随机傅里叶特征的过程又引入了先验频率的分布参数$sigma$,num_scale,频率衰减率$beta$,以及是否设置$beta$为可学习。引入Cross Attention后又引入了注意力头数，注意力维度等超参数。引入双网络训练后又要决定$u_l$和$u_h$分别的学习率，网络层数和宽度，分别的激活函数，以及$alpha$的更新频率或学习率。这些超参数大多在论文中没有明确，调参变得非常困难。
+除去PINN的超参数，加入随机傅里叶特征的过程又引入了先验频率的分布参数$sigma$,num_scale,频率衰减率$beta$,以及是否设置$beta$为可学习。引入Cross
+  Attention后又引入了注意力头数，注意力维度等超参数。引入双网络训练后又要决定$u_l$和$u_h$分别的学习率，网络层数和宽度，分别的激活函数，以及$alpha$的更新频率或学习率。这些超参数大多在论文中没有明确，调参变得非常困难。

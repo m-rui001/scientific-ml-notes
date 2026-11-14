@@ -17,7 +17,6 @@
 
 // Definitions for math
 
-
 #let rm(x) = math.upright(x)
 #let bf(x) = math.bold(math.upright(x))
 #let prox = math.op("prox")
@@ -70,7 +69,6 @@
   let text-color = if theme == "dark" { rgb("#ffffff") } else { rgb("#000000") }
   let raw-color = if theme == "dark" { rgb("#27292c") } else { rgb("#f0f0f0") }
   let font = default-font + font
-  
 
   /// 设置段落样式。
   set par(
@@ -169,7 +167,7 @@
       set text(0.9em)
       stack(
         spacing: 0.2em,
-        
+
         grid(
           columns: (1fr, auto, 1fr),
           align(left, semester),

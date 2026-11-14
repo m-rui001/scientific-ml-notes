@@ -31,7 +31,8 @@
 == 交叉注意力是什么：
 交叉注意力机制是 Transformer 架构的核心组件，核心功能为建模两种不同模态 / 序列域间的语义关联与特征对齐，解决跨域任务中的语义鸿沟问题。
 
-其遵循查询 - 键 - 值（QKV）范式，核心特征是域分离输入：查询向量（Q）源自目标序列，键（K）与值（V）向量源自源序列。通过计算 Q 与 K 的缩放点积相似度得到注意力权重（量化跨域位置关联度），经 Softmax 归一化后加权聚合 V，生成融合目标导向与源域信息的特征表示。
+其遵循查询 - 键 - 值（QKV）范式，核心特征是域分离输入：查询向量（Q）源自目标序列，键（K）与值（V）向量源自源序列。通过计算 Q 与 K 的缩放点积相似度得到注意力权重（量化跨域位置关联度），经 Softmax
+  归一化后加权聚合 V，生成融合目标导向与源域信息的特征表示。
 
 该机制广泛应用于机器翻译、图文对齐等跨模态 / 序列任务，相较于自注意力，通过解耦 Q 与 K V 的来源，可更高效捕捉跨域关键信息，避免单一序列内部冗余关联干扰。
 #pagebreak()
@@ -44,7 +45,8 @@
 实验结果表明，相较于基于相同多尺度特征库构建的对标基线模型，所提方法能够有效加速高频分量的收敛。
 #pagebreak()
 == 构建随机傅里叶特征库
-傅里叶特征库（Fourier Feature Bank）是一种用于增强神经网络高频表征能力的特征集合，核心是通过傅里叶变换相关的映射，将输入数据映射到包含多尺度频率信息的高维特征空间，为模型提供丰富的频谱信息以适配高频、振荡或不连续目标的拟合需求。
+傅里叶特征库（Fourier Feature
+  Bank）是一种用于增强神经网络高频表征能力的特征集合，核心是通过傅里叶变换相关的映射，将输入数据映射到包含多尺度频率信息的高维特征空间，为模型提供丰富的频谱信息以适配高频、振荡或不连续目标的拟合需求。
 
 具体构建步骤如下：
 - 基础频率采样
@@ -175,13 +177,15 @@ $
 现在我们把大于阈值的频率都转化为角频率:
 $
   omega_k^text("post")=(2 pi)/L k , quad k in cal(K)_text("post")
-$ 
+$
 #v(-1em)
 其中L是输入域的长度。
 #pagebreak()
 定义$M_text("post")=|cal(K)_text("post")|$,然后我们构造后验的傅里叶特征:
 $
-  phi.alt_text("post")(x)= sqrt(2/M_text("post")) [cos(omega_k^text("post")x+b_k^text("post"))]_(k in cal(K)_text("post")), quad phi.alt(x) in bb(R)^(M_text("post")) 
+  phi.alt_text("post")(x)=
+    sqrt(2/M_text("post")) [cos(omega_k^text("post")x+b_k^text("post"))]_(k in cal(K)_text("post")), quad
+    phi.alt(x) in bb(R)^(M_text("post"))
 $
 其中$b_k^text("post")~text("Uniform")(0,2pi)$.
 然后我们将后验特征重塑为token形式:
@@ -196,7 +200,6 @@ $W_Q^((l)),W_K^((l)),W_V^((l)) in bb(R)^(d_q times d_q)$仍然保持不变,$H(x)
 $
 Q_l in bb(R)^(d_q)，K_l in bb(R)^(N_text("aug") times d_q)，V_l in bb(R)^(N_text("aug") times d_q)
 $
-
 
 要平滑地融合后验频率，我们在每个交叉注意力块的logit层引入了加性注意力掩码：
 $

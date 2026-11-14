@@ -1,7 +1,7 @@
 # mathbook PDF 到数学 EPUB 工作流程技术报告
 
 **报告日期：2026-09-25**  
-**范围：** E:\mathbook 数学书 PDF 生产线，涵盖目录体检、批量 OCR、断点续跑、pcex 中间格式、EPUB 渲染、公式校验与 GLM-OCR 修正。  
+**范围：** <来源库> 数学书 PDF 生产线，涵盖目录体检、批量 OCR、断点续跑、pcex 中间格式、EPUB 渲染、公式校验与 GLM-OCR 修正。  
 **依据：** 当前代码、运行账簿、批次日志和精修记录。历史数字会随书库及渲染版本变化，以下均注明数据口径。
 
 ## 1. 总览
@@ -26,21 +26,21 @@ PDF 体检 → 书单筛选 → 每书独立 worker → pdf-craft 逐页 OCR →
 
 | 位置 | 内容与职责 |
 |---|---|
-| E:\mathbook | PDF 来源库，含根目录散放文件和现有学科目录。|
-| E:\EPUB\pipeline | 批处理、pcex 解析与渲染、质量检查脚本。|
-| E:\EPUB\out\mathbook | 交付 EPUB，输出目录随来源相对目录组织。|
-| E:\EPUB\work\survey.json | PDF 页数、大小、扫描/数字版分类等目录体检结果。|
-| E:\EPUB\work\mathbook\manifest.json | OCR 主账簿：每本书状态、页数、EPUB/pcex 路径、用时及公式统计。|
-| E:\EPUB\work\mathbook\render_manifest.json | render-only 独立账簿，避免纯渲染任务和 OCR 批次互相覆盖状态。|
-| E:\EPUB\work\mathbook\books\<safe-stem> | 每书持久工作区，含 analysing、逐页 XML、图片资产、pcex、渲染目录和 run.log。|
-| E:\EPUB\work\mathbook\corrections | 逐书 LaTeX 覆写叠加层，不修改原始 pcex。|
-| E:\EPUB\work\glmocr_refine | GLM-OCR 响应缓存、页图、调用账本和阶段日志。|
+| <来源库> | PDF 来源库，含根目录散放文件和现有学科目录。|
+| <EPUB 工作区>\pipeline | 批处理、pcex 解析与渲染、质量检查脚本。|
+| <EPUB 工作区>\out\mathbook | 交付 EPUB，输出目录随来源相对目录组织。|
+| <EPUB 工作区>\work\survey.json | PDF 页数、大小、扫描/数字版分类等目录体检结果。|
+| <EPUB 工作区>\work\mathbook\manifest.json | OCR 主账簿：每本书状态、页数、EPUB/pcex 路径、用时及公式统计。|
+| <EPUB 工作区>\work\mathbook\render_manifest.json | render-only 独立账簿，避免纯渲染任务和 OCR 批次互相覆盖状态。|
+| <EPUB 工作区>\work\mathbook\books\<safe-stem> | 每书持久工作区，含 analysing、逐页 XML、图片资产、pcex、渲染目录和 run.log。|
+| <EPUB 工作区>\work\mathbook\corrections | 逐书 LaTeX 覆写叠加层，不修改原始 pcex。|
+| <EPUB 工作区>\work\glmocr_refine | GLM-OCR 响应缓存、页图、调用账本和阶段日志。|
 
 ### 路径依赖
 
-主 manifest 的键是相对于 E:\mathbook 的路径，survey 使用相同的 rel。batch.py 又以该相对路径净化生成工作目录名：斜杠转换为双下划线，非法文件名字符替换，长度最多 110 个字符。因此移动或改名 PDF 会影响 manifest 与 survey 键、页 XML 和缓存目录、pcex 路径、EPUB 输出位置，以及失败公式映射中保存的路径。
+主 manifest 的键是相对于 <来源库> 的路径，survey 使用相同的 rel。batch.py 又以该相对路径净化生成工作目录名：斜杠转换为双下划线，非法文件名字符替换，长度最多 110 个字符。因此移动或改名 PDF 会影响 manifest 与 survey 键、页 XML 和缓存目录、pcex 路径、EPUB 输出位置，以及失败公式映射中保存的路径。
 
-当前 E:\mathbook 有 446 个实际 PDF：171 个在根目录，其余分布在 10 个已有目录。survey 中有 447 条记录，其中一条指向当前不存在的 PDF。用户要求先不移动或改名这些书；本报告据此保留现有路径。
+当前 <来源库> 有 446 个实际 PDF：171 个在根目录，其余分布在 10 个已有目录。survey 中有 447 条记录，其中一条指向当前不存在的 PDF。用户要求先不移动或改名这些书；本报告据此保留现有路径。
 
 ## 3. 目录体检与队列构建
 
@@ -220,7 +220,7 @@ work/glmocr_refine.py 将精修分为 fetch、patch、apply：
 
 ## 10. 日常运行核对清单
 
-1. 检查 E:\mathbook 与 survey 的路径、数量是否一致；来源库变化后重新 survey。
+1. 检查 <来源库> 与 survey 的路径、数量是否一致；来源库变化后重新 survey。
 2. 从 manifest 读取 done/failed/pending；判断长任务使用 diag_alive，不凭旧日志里的失败行判断当前状态。
 3. 对每个新批次保存明确书单，用 --only 限定范围；核对 jobs、最大页数、单书超时、OCR 请求超时和重抽参数。
 4. 保留 books/analysing 作为断点目录；清理截断 XML 和孤儿资产时不要触碰运行中的临时文件。
@@ -231,10 +231,10 @@ work/glmocr_refine.py 将精修分为 fetch、patch、apply：
 
 命令形态示例，书单需由获准的任务生成：
 
-    python pipeline\survey.py --root E:\mathbook --out E:\EPUB\work\survey.json
-    python pipeline\batch.py --root E:\mathbook --out E:\EPUB\out\mathbook --work E:\EPUB\work\mathbook --only E:\EPUB\work\batch.txt --jobs 16 --timeout-min 300 --ocr-timeout 300 --ocr-size gundam
-    python pipeline\check_epub.py E:\EPUB\out\mathbook\某本书.epub
-    python pipeline\check_math.py E:\EPUB\out\mathbook\某本书.epub
+    python pipeline\survey.py --root <来源库> --out <EPUB 工作区>\work\survey.json
+    python pipeline\batch.py --root <来源库> --out <EPUB 工作区>\out\mathbook --work <EPUB 工作区>\work\mathbook --only <EPUB 工作区>\work\batch.txt --jobs 16 --timeout-min 300 --ocr-timeout 300 --ocr-size gundam
+    python pipeline\check_epub.py <EPUB 工作区>\out\mathbook\某本书.epub
+    python pipeline\check_math.py <EPUB 工作区>\out\mathbook\某本书.epub
     python work\glmocr_refine.py fetch --from-failures
     python work\glmocr_refine.py patch --from-failures
     python work\glmocr_refine.py apply
@@ -243,7 +243,7 @@ work/glmocr_refine.py 将精修分为 fetch、patch、apply：
 
 out\mathbook\PROGRESS.md 是旧快照，不能替代当前 manifest。survey 有一条失效路径，需在下次完整目录扫描前重新生成或清理。不同日期 KaTeX 总失败数覆盖的 EPUB 集合不同，v2 效果应在固定集合上对照；最新 2,673 条是采集结果，不是语义错误总数。
 
-本报告只整理技术流程和现状。按照用户“先别动了”的要求，没有移动、重命名或重新分类 E:\mathbook 中的源文件。
+本报告只整理技术流程和现状。按照用户“先别动了”的要求，没有移动、重命名或重新分类 <来源库> 中的源文件。
 
 
 ## 附录：相关 Python 源文件全文
@@ -282,7 +282,7 @@ pdf-craft 的 `ExtractionOptions` **没有并发参数**，一次 `extract_pdf` 
 
 密钥
 ----
-只从环境变量 `SF_API_KEY` 或 `C:\\Users\\hp\\.workbuddy\\secrets\\siliconflow.key`
+只从环境变量 `SF_API_KEY` 或 `%USERPROFILE%\\.workbuddy\\secrets\\siliconflow.key`
 读取，**绝不写进 manifest、日志或任何输出文件**。
 """
 
@@ -306,10 +306,10 @@ from ocr_resume import fallback_stats, scrub_dirty_assets, scrub_truncated_pages
 
 PY = sys.executable
 HERE = Path(__file__).resolve().parent
-KEY_FILE = Path(r"C:\Users\hp\.workbuddy\secrets\siliconflow.key")
+KEY_FILE = Path(r"%USERPROFILE%\.workbuddy\secrets\siliconflow.key")
 KEY_DIR = KEY_FILE.parent
 KEY_GLOB = "siliconflow*.key"
-POPPLER = r"E:\EPUB\tools\poppler\Library\bin"
+POPPLER = r"<EPUB 工作区>\tools\poppler\Library\bin"
 BASE_URL = "https://api.siliconflow.cn/v1"
 MODEL = "deepseek-ai/DeepSeek-OCR"
 
@@ -1094,10 +1094,10 @@ def key_of(job: Job, chunked: bool) -> str:
 
 def main() -> int:
     ap = argparse.ArgumentParser(description="批量 PDF → EPUB（LaTeX 公式）")
-    ap.add_argument("--root", default=r"E:\mathbook")
-    ap.add_argument("--out", default=r"E:\EPUB\out\mathbook")
-    ap.add_argument("--work", default=r"E:\EPUB\work\mathbook")
-    ap.add_argument("--survey", default=r"E:\EPUB\work\survey.json")
+    ap.add_argument("--root", default=r"<来源库>")
+    ap.add_argument("--out", default=r"<EPUB 工作区>\out\mathbook")
+    ap.add_argument("--work", default=r"<EPUB 工作区>\work\mathbook")
+    ap.add_argument("--survey", default=r"<EPUB 工作区>\work\survey.json")
     ap.add_argument("--jobs", type=int, default=2, help="同时跑几本书（唯一的提速杠杆）")
     ap.add_argument("--sort", default="small", choices=["small", "big", "name"])
     ap.add_argument("--kind", default="all", choices=["all", "digital", "mixed", "scan"])
@@ -1123,7 +1123,7 @@ def main() -> int:
                     help="只从已有 .pcex 重渲染 EPUB（不 OCR）——渲染层改了参数/代码后用这个")
     ap.add_argument("--retry-failed", action="store_true")
     ap.add_argument("--no-resume", action="store_true")
-    ap.add_argument("--log", default=r"E:\EPUB\work\mathbook\batch.log",
+    ap.add_argument("--log", default=r"<EPUB 工作区>\work\mathbook\batch.log",
                     help="自写 UTF-8 日志（不要用 shell 重定向，中文会变乱码）")
     # worker 模式
     ap.add_argument("--run-single", default=None, help=argparse.SUPPRESS)
@@ -1803,9 +1803,9 @@ def human(n: float) -> str:
 
 def main() -> int:
     ap = argparse.ArgumentParser(description="PDF 目录体检：页数、扫描/原生、OCR 工期")
-    ap.add_argument("--root", default=r"E:\mathbook")
-    ap.add_argument("--out", default=r"E:\EPUB\work\survey.json")
-    ap.add_argument("--summary", default=r"E:\EPUB\work\survey.md")
+    ap.add_argument("--root", default=r"<来源库>")
+    ap.add_argument("--out", default=r"<EPUB 工作区>\work\survey.json")
+    ap.add_argument("--summary", default=r"<EPUB 工作区>\work\survey.md")
     ap.add_argument("--limit", type=int, default=0, help="只查前 N 本（调试用）")
     a = ap.parse_args()
 
@@ -5202,7 +5202,7 @@ sys.stdout.reconfigure(encoding="utf-8")
 
 # workbuddy 已卸载（binaries 没了）→ 系统 node；v24 实测跑 katex.min.js 正常
 NODE = shutil.which("node") or r"C:\Program Files\nodejs\node.exe"
-KATEX_JS = Path(r"E:\EPUB\pipeline\assets\katex\katex.min.js")
+KATEX_JS = Path(r"<EPUB 工作区>\pipeline\assets\katex\katex.min.js")
 
 # The reader scans text nodes for these delimiters, so we must see exactly the
 # same thing it sees: entity-decoded text, delimiters included.
@@ -6640,9 +6640,9 @@ import time
 from pathlib import Path
 
 PY = sys.executable
-WORK = Path(r"E:\EPUB\work")
-PIPELINE = Path(r"E:\EPUB\pipeline")
-BOOKS_WORK = Path(r"E:\EPUB\work\mathbook")
+WORK = Path(r"<EPUB 工作区>\work")
+PIPELINE = Path(r"<EPUB 工作区>\pipeline")
+BOOKS_WORK = Path(r"<EPUB 工作区>\work\mathbook")
 LOCK = WORK / "autopilot.lock"
 STATE = WORK / "autopilot_state.json"
 LOG = WORK / "autopilot.log"
@@ -6887,8 +6887,8 @@ import json
 import pathlib
 import time
 
-ROOT = pathlib.Path(r"E:\EPUB\work\mathbook\books")
-WORK = pathlib.Path(r"E:\EPUB\work")
+ROOT = pathlib.Path(r"<EPUB 工作区>\work\mathbook\books")
+WORK = pathlib.Path(r"<EPUB 工作区>\work")
 
 
 def age_min(ts: float, now: float) -> float:
@@ -6982,7 +6982,7 @@ import sys
 import time
 from pathlib import Path
 
-sys.path.insert(0, r"E:\EPUB\pipeline")
+sys.path.insert(0, r"<EPUB 工作区>\pipeline")
 sys.stdout.reconfigure(encoding="utf-8")
 import pcexlib as P  # noqa: E402
 
@@ -7113,7 +7113,7 @@ import json
 import sys
 from pathlib import Path
 
-sys.path.insert(0, r"E:\EPUB\pipeline")
+sys.path.insert(0, r"<EPUB 工作区>\pipeline")
 sys.stdout.reconfigure(encoding="utf-8")
 import check_math as CM  # noqa: E402
 
@@ -7167,8 +7167,8 @@ import json
 import sys
 from pathlib import Path
 
-sys.path.insert(0, r"E:\EPUB\pipeline")
-sys.path.insert(0, r"E:\EPUB\work")
+sys.path.insert(0, r"<EPUB 工作区>\pipeline")
+sys.path.insert(0, r"<EPUB 工作区>\work")
 sys.stdout.reconfigure(encoding="utf-8")
 import pcexlib as P  # noqa: E402
 from glmocr_refine import bhash, CACHE  # noqa: E402
@@ -7278,7 +7278,7 @@ import urllib.parse
 from concurrent.futures import ThreadPoolExecutor, as_completed
 from pathlib import Path
 
-sys.path.insert(0, r"E:\EPUB\pipeline")
+sys.path.insert(0, r"<EPUB 工作区>\pipeline")
 sys.stdout.reconfigure(encoding="utf-8")
 
 import httpx  # noqa: E402
@@ -7289,12 +7289,12 @@ from check_math import katex_batch  # noqa: E402  # 复用产线同款 KaTeX 门
 # ── 常量 ────────────────────────────────────────────────────────────────────
 KEY = Path(r"C:\Users\hp\.workbuddy\secrets\glmocr.key").read_text(encoding="ascii").strip()
 URL = "https://open.bigmodel.cn/api/paas/v4/layout_parsing"
-PDF_ROOT = Path(r"E:\mathbook")
-POPPLER = Path(r"E:\EPUB\tools\poppler\Library\bin\pdftoppm.exe")
-MATHBOOK = Path(r"E:\EPUB\work\mathbook")
-OUTROOT = Path(r"E:\EPUB\out\mathbook")
-DEFECTS = Path(r"E:\EPUB\work\math_defect_fids.json")
-WORKROOT = Path(r"E:\EPUB\work\glmocr_refine")
+PDF_ROOT = Path(r"<来源库>")
+POPPLER = Path(r"<EPUB 工作区>\tools\poppler\Library\bin\pdftoppm.exe")
+MATHBOOK = Path(r"<EPUB 工作区>\work\mathbook")
+OUTROOT = Path(r"<EPUB 工作区>\out\mathbook")
+DEFECTS = Path(r"<EPUB 工作区>\work\math_defect_fids.json")
+WORKROOT = Path(r"<EPUB 工作区>\work\glmocr_refine")
 CACHE = WORKROOT / "cache"
 LEDGER = WORKROOT / "ledger.json"
 
@@ -7749,10 +7749,10 @@ def phase_apply(a) -> int:
         outdir = Path(epub).parent if epub else (OUTROOT / Path(rel).parent)
         outdir.mkdir(parents=True, exist_ok=True)
         lang = "zh" if re.search(r"[\u4e00-\u9fff]", stem) else "en"
-        cmd = [PY, r"E:\EPUB\pipeline\pcex2x.py", str(pcex),
+        cmd = [PY, r"<EPUB 工作区>\pipeline\pcex2x.py", str(pcex),
                "--outdir", str(outdir), "--formats", "epub", "--stem", stem,
                "--language", lang, "--trace",
-               "--katex", r"E:\EPUB\pipeline\assets\katex",
+               "--katex", r"<EPUB 工作区>\pipeline\assets\katex",
                "--corrections", str(cf)]
         r = subprocess.run(cmd, capture_output=True, text=True, encoding="utf-8",
                            errors="replace", timeout=1800)

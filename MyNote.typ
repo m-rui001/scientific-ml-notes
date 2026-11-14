@@ -12,10 +12,10 @@
 )
 #set page(header:none,margin:4em,)
 #set-inherited-levels(3)
-#align(center)[#set text(size: 36pt,font:"FZShuti") 
+#align(center)[#set text(size: 36pt,font:"FZShuti")
 前言]
 #align[
-#set text(size:20pt) 
+#set text(size:20pt)
 证明数学命题，既要熟悉对象的性质，也要掌握常见的思想方法。然而写成的证明中，这些思考过程常被隐去。读者逐步阅读时，即使每步都懂，仍可能困惑：“为何他能想到，我却不能？”
 
 纸质教材常因篇幅所限，难以兼顾启发性、系统性与严谨性。其中启发性最易被牺牲，也增加了阅读难度。
@@ -39,7 +39,6 @@ QQ:3900951892
 
 作品年代：1890年2月 阿尔圣雷米医院
 
-
 1890年，梵高割耳后被送进圣雷米医院治疗，在那里他跟各种精神病人住在一起，医院的生活条件很差，梵高病情时好时坏。
 
 住院期间，梵高收到弟弟提奥的来信：“妻子乔安娜怀孕了，他要做父亲了”。梵高感动得热泪盈眶，这也许是梵高人生中最幸福的时刻，他最爱的弟弟要做父亲了，梵高家族即将迎来小生命。
@@ -60,7 +59,7 @@ QQ:3900951892
 = 数学分析
 == Laplace方法
 #idea[
-Laplace方法基本思想：估计$I(x)=integral_a^b f(t) e^(phi.alt(t) x) dif t$时，如果$phi.alt$取得最大值$phi.alt(c),f(c)!=0$,那么$c$的邻域这部分积分贡献了$I(x)$在$x	-> +oo$时的主部.
+Laplace方法基本思想：估计$I(x)=integral_a^b f(t) e^(phi.alt(t) x) dif t$时，如果$phi.alt$取得最大值$phi.alt(c),f(c)!=0$,那么$c$的邻域这部分积分贡献了$I(x)$在$x  -> +oo$时的主部.
 
 基本方法：取$(c-delta,c+delta)$,先利用单调性、有界性等性质估计出积分$I_1(x)=integral_(c-delta)^(c+delta) f(t) e^(phi.alt x) dif t$的渐近表达式，然后估计$integral_a^(c-delta)+integral_(c+delta)^b$,结果往往为0，再对$integral_(c-delta)^(c+delta)$进行估阶（如Taylor展开，分部积分等）.
 ]
@@ -75,16 +74,16 @@ $
 $
   (x_n-x_(n-1))/(y_n-y_(n-1))=e^(n^2)/(n integral_0^1 e^((x+n-1)^2)dif x)=1/(n integral_0^1 e^((x-1)^2) e^(2n(x-1)) dif x)
 $
-注意到当$x lt 1$时,令$n->+oo,e^(2n(x-1))	-> 0$，最大值点在$x=1$，因此使用Laplace方法估计分母部分，
+注意到当$x lt 1$时,令$n->+oo,e^(2n(x-1))  -> 0$，最大值点在$x=1$，因此使用Laplace方法估计分母部分，
 $
-  abs(n integral_0^(1-delta) e^((x-1)^2) e^(2n(x-1)) dif x) <= n integral_0^(1-delta) e dot e^(-2n delta) dif x = n(1-delta)e dot e^(-2n delta)	-> 0 quad (n -> +oo)
+  abs(n integral_0^(1-delta) e^((x-1)^2) e^(2n(x-1)) dif x) <= n integral_0^(1-delta) e dot e^(-2n delta) dif x = n(1-delta)e dot e^(-2n delta)  -> 0 quad (n -> +oo)
 $
 再考虑积分主部，直接根据单调性放缩成可积的形式
 $
-  n integral_(1-delta)^1 e^((x-1)^2) e^(2n(x-1)) dif x <= n integral_(1-delta)^1 e^(delta^2)e^(2n(x-1)) dif x=e^(delta^2)/2 e^(2n(x-1))|_(x=1-delta)^(x=1)=e^(delta^2)/2(1-e^(-2n delta))	-> e^(delta^2)/2
+  n integral_(1-delta)^1 e^((x-1)^2) e^(2n(x-1)) dif x <= n integral_(1-delta)^1 e^(delta^2)e^(2n(x-1)) dif x=e^(delta^2)/2 e^(2n(x-1))|_(x=1-delta)^(x=1)=e^(delta^2)/2(1-e^(-2n delta))  -> e^(delta^2)/2
 $
 $
-  n integral_(1-delta)^1 e^((x-1)^2) e^(2n(x-1)) dif x >= n integral_(1-delta)^1e^(2n(x-1)) dif x=1/(1-e^(-2n delta))	-> 1/2
+  n integral_(1-delta)^1 e^((x-1)^2) e^(2n(x-1)) dif x >= n integral_(1-delta)^1e^(2n(x-1)) dif x=1/(1-e^(-2n delta))  -> 1/2
 $
 因此，
 $
@@ -103,7 +102,7 @@ $
     2、计算 $
            lim_(x -> +oo) x integral_0^10 (1+t)^(-1) e^(-x t) dif t
          $
-  
+
 ]
 解：最大值在$t=0$，取$delta$,
 $
@@ -142,7 +141,7 @@ $
 $
 存在C>0,使得：
 $
-  abs(integral_0^delta e^(-x t) O(t^3) dif t )&<=integral_0^delta e^(-x t) C t^3 dif t  
+  abs(integral_0^delta e^(-x t) O(t^3) dif t )&<=integral_0^delta e^(-x t) C t^3 dif t
 $
 令 $u=x t$ 那么 :
 $
@@ -162,7 +161,7 @@ $
 以上的例子都显示含有e,对于没有e的情况，我们可以人为构造e来使用Laplace方法.
 ]
 #example[
-  
+
     4、求证：对于非负整数n,考虑积分
     $
       I_n=integral_0^(pi/2) sin^(2n)x dif x,text("则")
@@ -170,7 +169,7 @@ $
     $
       lim_(n ->+oo) sqrt(n) I_n= sqrt(pi)/2
     $
-  
+
 ]
 
 #proof[
@@ -185,7 +184,7 @@ $
 现在一方面，
 $
   integral_0^(pi/2) sin^(2n)x dif x&<= integral_(pi/2 -delta)^(pi/2) sin^(2n)x dif x + integral_0^(pi/2 -delta) sin^(2n)x dif x \
-  &<= integral_(pi/2 -delta)^(pi/2) e^(-(1-epsilon) n (x- pi/2)^2) dif x + (pi/2-delta)(cos delta)^(2n) 
+  &<= integral_(pi/2 -delta)^(pi/2) e^(-(1-epsilon) n (x- pi/2)^2) dif x + (pi/2-delta)(cos delta)^(2n)
 $
 令$t=sqrt(n(1-epsilon)) (x-pi/2)$,得:
 $
@@ -365,7 +364,7 @@ lim_(alpha->0^+) abs(integral_(N_1)^(N_2) e^(-alpha x)f(x) dif x) =abs(integral_
 $
 由Cuachy，$integral_1^infinity f(x) dif x$收敛.
 
-类似的，对$forall epsilon >0,forall delta>0,text("考虑任意的"),n_1,n_2 in (0,delta),n_2>n_1$，使用一致收敛的Cauchy收敛准则，$lim_(alpha->0^+) |integral_(n_1)^(n_2) e^(-alpha x)f(x) dif x|=|integral_(n_1)^(n_2) f(x) dif x|<=epsilon$,可以证明$integral_0^1 f(x) dif x$收敛. 
+类似的，对$forall epsilon >0,forall delta>0,text("考虑任意的"),n_1,n_2 in (0,delta),n_2>n_1$，使用一致收敛的Cauchy收敛准则，$lim_(alpha->0^+) |integral_(n_1)^(n_2) e^(-alpha x)f(x) dif x|=|integral_(n_1)^(n_2) f(x) dif x|<=epsilon$,可以证明$integral_0^1 f(x) dif x$收敛.
 
 #example[
   $
@@ -374,7 +373,7 @@ $
 ]
 #proof[
   1、$sum_(n=1)^infinity sin(n x)/n->$Sawtooth,即级数在$[0,2 pi]$上点态收敛于$f(x)= (pi - x)/2$，但在$x=0,2 pi$处Sawtooth不连续，所以不一致收敛.
-  
+
   2、假设一致收敛，对$epsilon=sin(1)dot ln 2,exists N>0,forall x in [0,2 pi]$
   $
     abs(sum_(n=N)^(2N) sin(n x)/n ) < epsilon
@@ -396,18 +395,18 @@ $
 ]
 #proof[
   $ h(x) eq.delta x+ln(1+ 1/x)\
-    forall x>=1, quad x< h(x) 
+    forall x>=1, quad x< h(x)
   $
   并且
   $
-    0<h'(x)= 1 - 1/(x^2 + x)<1 
+    0<h'(x)= 1 - 1/(x^2 + x)<1
   $
   $
     abs(f(x)-f(1))<=L abs(x-1)=L |x-1|\
     => abs(f(x))<= L |x-1| + abs(f(1))<= L x + abs(f(1))\
   $
   $
-    forall x_1 ,x_2 in [1,+infinity)\ 
+    forall x_1 ,x_2 in [1,+infinity)\
     &abs(f(x_1)/h(x_1) - f(x_2)/h(x_2))\
     &= abs((f(x_1) h(x_2) - f(x_2) h(x_1))/(h(x_1) h(x_2)))\
     &= abs([f(x_1) - f(x_2)] h(x_2) + f(x_2) [h(x_2) - h(x_1)])/(h(x_1) h(x_2))\
@@ -515,7 +514,7 @@ $
 $]
 证明很容易.
 #example[设$D=[0,1]times[0,1]$
-求证： 
+求证：
 $
   1<=integral.double_D sin(x^2)+cos(y^2) dif x dif y<=sqrt(2)
 $
@@ -574,7 +573,7 @@ $
 #theorem[$(a,b)$上的下凸函数$f$一定内闭Lipschitz连续]
 #proof[
 
-$text("任意")[c,d] subset(a,b) text("对于") forall x_0 in [c,d] 
+$text("任意")[c,d] subset(a,b) text("对于") forall x_0 in [c,d]
 $
 , 取$c<=x_0<d$，取$a<e<c quad d<h<b$ 由下凸函数的斜率比较定理知：对于足够小的$Delta x>0$ 使得$a<e<c<=x_0<x_0+Delta x<=d<h<b$有
 $
@@ -592,7 +591,7 @@ $
 $
 ]
 
-#example[ 
+#example[
 设 $f: [0, +infinity) -> [0, +infinity) $ 是一个非负函数，满足：
 - $f(x) = 0 $ 当且仅当$x = 0$；
 - $f $ 是*严格上凸*函数.
@@ -634,7 +633,7 @@ $ f(s) < f(b) + m(s-b). $
 - $f $ 是*严格上凸*函数.
 并且在$bb(R)$上定义函数$d(x_1,x_2)=f(|x_1-x_2|)$,则$d$是$bb(R)$上的度量]
 #proof[任取 $x, y, z in bb(R) $,令$a = | x - z |, quad b = | z - y |, quad c = | x - y |$
-由实数绝对值的三角不等式，有  
+由实数绝对值的三角不等式，有
 $c <= a + b $
 由@上凸函数的单调性， $f $ 非负、严格递增，因此
 $f(c) <= f(a + b) .$
@@ -750,7 +749,7 @@ $
   $
 ]
 $
-  I=cal(F)[(sin x)/x dot (sin x\/3)/(x\/3)](0)=1/(2 pi)(cal(F)[(sin x)/x] * cal(F)[(sin x\/3)/(x\/3)])(0)= pi 
+  I=cal(F)[(sin x)/x dot (sin x\/3)/(x\/3)](0)=1/(2 pi)(cal(F)[(sin x)/x] * cal(F)[(sin x\/3)/(x\/3)])(0)= pi
 $
 == 傅里叶级数的收敛
 #theorem[$
@@ -775,7 +774,7 @@ $]<SawtoothFunction>
   不把导数算出,是因为后续放缩我们要放掉符号不定的$cos((n+1/2) x) $.
   在$t in (0, 2 pi)$上，我们知道$sin(x/2)>0$,它的单调性和$t$和$pi$的大小关系有关.无论如何，对$integral$放缩时积分上界必须大于下界.
   $
-    abs(I_n (t))<=1/((n+1/2) sin(t/2)) +1/((n+1/2)) integral_(min(t,pi))^(max(t,pi)) sign(t-pi) (1/sin(x/2))' dif x 
+    abs(I_n (t))<=1/((n+1/2) sin(t/2)) +1/((n+1/2)) integral_(min(t,pi))^(max(t,pi)) sign(t-pi) (1/sin(x/2))' dif x
   $
   应当注意,$sign(t-pi) (1/sin(x/2))'$是在积分区域恒为正的.
   $
@@ -788,7 +787,7 @@ $]<SawtoothFunction>
 
 关于Sawtooth 函数的傅里叶级数的Gibbs现象，有以下方法:
 $
-    
+
   sum_(k=1)^n (sin (k t))/k &= 1/2 I_n (t) + (pi - t)/2\
   R_n (t)=sum_(k=1)^n (sin (k t))/k - (pi - t)/2 &= 1/2 integral_pi^t (sin((n + 1/2) x))/(sin(x/2)) dif x, quad t in (0,2 pi)\
   R_n^' (t)&= 1/2 (sin((n + 1/2) t))/(sin(t/2))\
@@ -885,16 +884,15 @@ $
 
     其中$lambda_1 , lambda_2$为$Phi$的特征值.
     令 $X = vec(x,y)$,则$f(x,y)= X^top Phi X$.
-    
+
     令$Y = Q^top X$,则$X = Q Y$.
     $ f(x,y)= Y^top (Q^top Phi Q) Y = Y^top mat(lambda_1 , 0 ; 0 , lambda_2) Y = lambda_1 y_1^2 + lambda_2 y_2^2 $
 
     由于$Y^top Y =X^top Q Q^top X = X^top X=x_1^2 +x_2^2 =1，$
-    
+
     此时题目结论是显然的.
     #tip-box[尝试使用拉格朗日乘数法也可以证明.]
-]  
-   
+]
 
 #pagebreak()
 #align(center)[
@@ -910,7 +908,7 @@ $
 #idea[用大数定律证明依概率收敛]
 #example[
   设${X_n}$为一独立同分布随机变量序列，$Var(X_n)=sigma^2<+infinity$，
-  
+
   令$S_n^2=1/n sum_(i=1)^n (X_i - overline(X))^2$,
   求证：
   $S_n^2 stretch(->)^P sigma^2$
@@ -973,7 +971,7 @@ $
 ]
 #proof[
   $P(X_i=1)=1/n$, 因此$bb(E)(X_i)=1/n$, Var$(X_i)=(n-1)/n^2$，注意到$X_i$不是相互独立的，（例如$n-1$个人拿到自己的信封时，第$n$个人一定拿到的自己是的信封）,我们无法使用大数定律直接得到结论.
-  
+
   联想到切比雪夫不等式，$ P(abs((S_n-bb(E)(S_n))/n )>= epsilon)<=Var(S_n-bb(E)(S_n))/(n^2 epsilon^2)$
 ，因此我们需要计算$Var(S_n)$，而$Var(S_n)=sum_(i=1)^n Var(X_i)+2 sum_(1<=i<j<=n)Cov(X_i,X_j)$，所以我们还需要计算协方差.
   $
@@ -1152,12 +1150,11 @@ $ Delta bold(theta)^top H Delta bold(theta) &= sum_i sum_j c_i c_j bold(v)_i^top
  #align(right)[  #set text(size: 22pt, font: "STXinwei")
  ——陶渊明   《归去来兮辞》]
 
-
 #pagebreak()
 #align(center)[
   #v(20em)
   #set text(size:28pt, weight: "bold", font: "STXinwei")
- 心无挂碍，无有恐怖，\ 远离颠倒梦想，究竟涅磐。 
+ 心无挂碍，无有恐怖，\ 远离颠倒梦想，究竟涅磐。
  ]
  #align(right)[  #set text(size: 22pt, font: "STXinwei")
  ——   《心经》]

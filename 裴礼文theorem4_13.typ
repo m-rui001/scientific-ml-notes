@@ -28,7 +28,7 @@
 #theorem-box[$(a,b)$上的下凸函数$f$一定内闭Lipschitz连续]
 #proof[
 
-$text("任意")[c,d] subset(a,b) text("对于") forall x_0 in [c,d] 
+$text("任意")[c,d] subset(a,b) text("对于") forall x_0 in [c,d]
 $
 , 取$c<=x_0<d$，取$a<e<c quad d<h<b$ 由下凸函数的斜率比较定理知：对于足够小的$Delta x>0$ 使得$a<e<c<=x_0<x_0+Delta x<=d<h<b$有
 $

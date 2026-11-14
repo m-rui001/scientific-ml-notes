@@ -8,10 +8,11 @@ $
 $
   |f(x)-p(x)|<epsilon,forall x in [0,1]
 $
-由题目条件知  
+由题目条件知
 $
   integral_0^1 f(x) p(x) dif x=0\
-  integral_0^1 f^2(x) dif x=integral_0^1 f(x)(f(x)-p(x)) dif x<=integral_0^1 |f(x)| dot |f(x)-p(x)| dif x<epsilon integral_0^1 |f(x)| dif x
+  integral_0^1 f^2(x) dif x=integral_0^1 f(x)(f(x)-p(x)) dif x<=integral_0^1 |f(x)| dot |f(x)-p(x)| dif x<epsilon
+    integral_0^1 |f(x)| dif x
 $
 由$epsilon$的任意性，可得
 $

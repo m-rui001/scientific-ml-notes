@@ -15,7 +15,7 @@ mu_2=1/n sum_(i=1)^n x_i^2
 $
 联立
 $
-  cases(1/n sum_(i=1)^n x_i=m p,1/n sum_(i=1)^n x_i^2=m p +m(m-1)p^2) 
+  cases(1/n sum_(i=1)^n x_i=m p,1/n sum_(i=1)^n x_i^2=m p +m(m-1)p^2)
 $
 解得$p=mu_1/m$，带入第二个方程得
 $
@@ -27,7 +27,8 @@ $
 $
 $m$和$p$的矩估计量分别为
 $
-  hat(m)=[( (1/n sum_(i=1)^n x_i)^2 )/( (1/n sum_(i=1)^n x_i)-(1/n sum_(i=1)^n x_i^2)+( (1/n sum_(i=1)^n x_i)^2 ) )]， quad text("中括号表示取整")\
+  hat(m)=[( (1/n sum_(i=1)^n x_i)^2 )/( (1/n sum_(i=1)^n x_i)-(1/n sum_(i=1)^n x_i^2)+( (1/n sum_(i=1)^n
+    x_i)^2 ) )]， quad text("中括号表示取整")\
   hat(p)=( (1/n sum_(i=1)^n x_i)-(1/n sum_(i=1)^n x_i^2)+( (1/n sum_(i=1)^n x_i)^2 ) )/(1/n sum_(i=1)^n x_i)
 $
 = 2
@@ -40,7 +41,8 @@ $
   bold(r)=(r cos phi, r sin phi, b phi)\
   bold(r)_r=(cos phi,sin phi,0)\
   bold(r)_phi=(-r sin phi,r cos phi,b)\
-  bold(r)_r times bold(r)_phi=mat(delim:"|",bold(i),bold(j),bold(k);cos phi,sin phi,0;-r sin phi,r cos phi,b)= (b cos phi, -b sin phi, r)\
+  bold(r)_r times bold(r)_phi=mat(delim:"|",bold(i),bold(j),bold(k);cos phi,sin phi,0;-r sin phi,r cos phi,b)=
+    (b cos phi, -b sin phi, r)\
   ||bold(r)_r times bold(r)_phi||=sqrt(b^2+r^2)\
   S=integral.double_(D)sqrt(b^2+r^2)dif r dif phi, quad D={(r,phi)|0<=r<=a,0<=phi<=2 pi}\
 $
@@ -63,5 +65,5 @@ $
   =2 pi/a [1/3 (2 a^2)^(3/2)-1/3 a^3]\
   =2 pi/a [ (2^(3/2)/3) a^3 -1/3 a^3 ]\
   =2 pi a^2/3 (2^(3/2)-1)
-  
+
 $

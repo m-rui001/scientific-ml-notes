@@ -25,7 +25,6 @@
   ),
 )
 
-
 #title-slide()
 
 == Outline <touying:hidden>
@@ -37,7 +36,8 @@
 == 核技巧
 
 #theorem-box[
-  在机器学习中，核技巧（Kernel Trick） 是解决非线性问题的核心工具之一。它通过隐式地将原始低维数据映射到高维特征空间，让原本线性不可分的数据变得可分，进而用线性模型解决非线性问题。支持向量机（SVM）、高斯过程回归（GPR）等经典算法都依赖核技巧实现强大的非线性拟合能力。
+  在机器学习中，核技巧（Kernel Trick）
+    是解决非线性问题的核心工具之一。它通过隐式地将原始低维数据映射到高维特征空间，让原本线性不可分的数据变得可分，进而用线性模型解决非线性问题。支持向量机（SVM）、高斯过程回归（GPR）等经典算法都依赖核技巧实现强大的非线性拟合能力。
 ]
 #place(
   bottom+left,
@@ -72,14 +72,16 @@ $
 当数据集规模较大时(如样本数$N=10000$)，使用核技巧需要计算核矩阵（Kernel Matrix）$K in bb(R)^(N times N)$,此时会面临两个严重问题:
 - 时间复杂度：计算核矩阵需要$O(N^2)$次核函数运算,计算量巨大；
 - 空间复杂度：储存核矩阵需要$O(N^2)$的内存,对于大规模数据集,内存需求难以满足。
-因此，核技巧在非线性核函数 + 大数据集的场景下几乎不可用。而随机傅里叶特征（Random Fourier Features, RFF）正是为解决这个问题而生 —— 它通过显式的低维映射，用 $O(N dot D)$ 的复杂度（$D$ 为映射后维度，通常 $D lt.double N$)近似核函数，让大数据下的非线性建模成为可能。
+因此，核技巧在非线性核函数 + 大数据集的场景下几乎不可用。而随机傅里叶特征（Random Fourier Features,
+  RFF）正是为解决这个问题而生 —— 它通过显式的低维映射，用 $O(N dot D)$ 的复杂度（$D$ 为映射后维度，通常 $D lt.double N$)近似核函数，让大数据下的非线性建模成为可能。
 == RFF 的核心思想
 #theorem-box[
-  RFF 的核心目标是：找到一个#text(fill: blue, "显式")的低维映射$Z(dot):bb(R)^d -> bb(R)^D$,使得：$k(bold(x),bold(y)) approx Z(bold(x))^T dot Z(bold(y))$.
+  RFF 的核心目标是：找到一个#text(fill: blue, "显式")的低维映射$Z(dot):bb(R)^d -> bb(R)^D$,使得：$k(bold(x),bold(y)) approx
+    Z(bold(x))^T dot Z(bold(y))$.
 ]
 这样一来，我们可以先通过 $Z(dot)$ 将原始数据映射到$D$维特征空间,然后利用线性模型替代非线性核方法，可以大幅降低计算复杂度。
-#caution-box[RFF 仅适用于移位不变核（Shift-Invariant Kernel），这类核函数的输出只与两个数据点的差值有关，形式为：$k(bold(x),bold(y)) = k(bold(x) - bold(y))$.常见的移位不变核包括径向基函数（RBF）核、多项式核等。]
-
+#caution-box[RFF 仅适用于移位不变核（Shift-Invariant Kernel），这类核函数的输出只与两个数据点的差值有关，形式为：$k(bold(x),bold(y)) =
+  k(bold(x) - bold(y))$.常见的移位不变核包括径向基函数（RBF）核、多项式核等。]
 
 == RFF 的数学推导
 #theorem-box[

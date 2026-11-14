@@ -8,7 +8,7 @@ $
 $
 记为
 $
-  (X_1+X_2+...+X_n)/n stretch(->)^(text(a.s.) )mu quad (n->infinity) 
+  (X_1+X_2+...+X_n)/n stretch(->)^(text(a.s.) )mu quad (n->infinity)
 $
 ]
 设$X_1,X_2,dots$为一独立同分布的随机变量序列，定义
@@ -74,7 +74,7 @@ $
   T=Z/sqrt(chi^2 (k)\/k) ~ t(k)
 $
 ]
-如果$X_1,X_2,dots,X_n stretch(~)^text("iid") N(mu,sigma^2)$, 
+如果$X_1,X_2,dots,X_n stretch(~)^text("iid") N(mu,sigma^2)$,
 $sigma$未知，样本标准差为 $s$ ,Gosset发现统计量
 $
   t=(overline(X)-mu)/(s\/sqrt(n))

@@ -39,7 +39,7 @@ $
     h_theta (x)=[theta_0, theta_1, theta_2, theta_3] vec(1,x,x^2,x^3)=theta^T phi(x)
   $
   这样，我们得到了新的数据集${(phi^(1),y^(1)), (phi^(2),y^(2)), ..., (phi^(n),y^(n))}$\
-  $phi$ 
+  $phi$
  被称为特征提取函数（feature function / feature extractor）\
  $phi(x)$被称为特征（features），\
  而$x$被称为属性（attribute）或原始特征（raw feature）。
@@ -54,7 +54,7 @@ $
 ,可以看出，计算损失函数和参数更新时，都涉及到$phi(x^((i)))$的计算。如果$phi$将数据映射到一个非常高维的空间中，计算$phi(x^((i)))$的开销以及做内积的开销会非常大，甚至不可行。
 #theorem-box[
   若$theta^0=0$,那么$theta$恒能表示为features的线性组合，即$theta=sum_(i=1)^n beta_i phi(x^((i)))$，其中$beta_i in bb(R)$
-] 
+]
 #proof[
   通过数学归纳法证明：\
   (1)当迭代次数$k=0$时，$theta^0=0$，命题成立。\
@@ -70,7 +70,8 @@ $
 ]\
 这样，我们就不必每次迭代都计算高维的$theta$，而是通过学习$beta_i$来间接表示$theta$。将$theta^m=sum_(i=1)^n beta_i^(m) phi(x^((i)))$代入参数更新公式，有：
 $
-  theta^(m+1)=sum_(i=1)^n beta_i^(m) phi(x^((i))) + alpha sum_(i=1)^n (y^((i)) - (sum_(j=1)^n beta_j^(m) phi(x^((j))))^T phi(x^((i)))) phi(x^((i)))\
+  theta^(m+1)=sum_(i=1)^n beta_i^(m) phi(x^((i))) + alpha sum_(i=1)^n
+    (y^((i)) - (sum_(j=1)^n beta_j^(m) phi(x^((j))))^T phi(x^((i)))) phi(x^((i)))\
   =sum_(i=1)^n underbrace([beta_i^(m) + alpha (y
 ^((i)) - sum_(j=1)^n beta_j^(m) phi(x^((j)))^T phi(x^((i))) )],beta_i^(m+1)) phi(x^((i)))
 $
@@ -83,13 +84,14 @@ $
 - $phi(x^((j)))^T phi(x^((i)))$在整个过程中只需计算一次，可以预先计算并存储下来；
 - 计算高维特征 $phi(x)$ 和 $phi(y)$ 的内积，不需要显式构造高维特征，直接用原始低维向量 $x,y$ 的内积就能计算,例如:
 $
-  chevron.l phi(x), phi(y) chevron.r = [1,x, x^2, x^3] vec(1,y,y^2,y^3) \ 
+  chevron.l phi(x), phi(y) chevron.r = [1,x, x^2, x^3] vec(1,y,y^2,y^3) \
   =1+ x y + x^2 y^2 + x^3 y^3 = chevron.l 1,1 chevron.r + chevron.l x,y chevron.r + chevron.l x, y chevron.r^2 + chevron.l x, y chevron.r^3
 $
 #theorem-box[
 定义核函数（kernel function）$K(x,y)=chevron.l phi(x), phi(y) chevron.r$
 ]
-在这个例子中，$K(x,y)=chevron.l 1,1 chevron.r + chevron.l x,y chevron.r + chevron.l x, y chevron.r^2 + chevron.l x, y chevron.r^3$,而原空间的内积 $chevron.l x,y chevron.r$ 只需要计算一次。当这里不是4维而100维时，这无疑大大降低了计算量。\
+在这个例子中，$K(x,y)=chevron.l 1,1 chevron.r + chevron.l x,y chevron.r + chevron.l x, y chevron.r^2 + chevron.l x,
+  y chevron.r^3$,而原空间的内积 $chevron.l x,y chevron.r$ 只需要计算一次。当这里不是4维而100维时，这无疑大大降低了计算量。\
 若$phi:bb(R)^d -> bb(R)^p$,数据量为$n$,则单次迭代$theta$的时间复杂度由$O(n p)$变为$O(n^2)$，当$n<<p$时，降幅显著。\
 #pagebreak()
 考虑核函数$
@@ -97,15 +99,18 @@ K(x,y)=sum_(i=0)^p chevron.l x,y chevron.r^k
 $当$p$极大时，直接计算$K(x,y)$的开销仍然极大，但是如果令$
 K(x,y)=sum_(i=0)^p 1/(k!) chevron.l x,y chevron.r^k
 $,然后令$p -> +oo$,则有：$K(x,y)=e^(chevron.l x,y chevron.r)$ ,这样我们就不必显示地计算多次低维空间内积的幂次，而是通过计算一次指数函数来间接得到结果。并且数据的特征被映射到了无穷维空间。\
-然而，这个核函数并不常用，一个显著的问题是当$chevron.l x,y chevron.r$较大时，$e^(chevron.l x,y chevron.r)$会变得非常大，导致数值不稳定。另外，这个核函数的几何意义并不如下文将引入的高斯核清晰。\
+然而，这个核函数并不常用，一个显著的问题是当$chevron.l x,y
+  chevron.r$较大时，$e^(chevron.l x,y chevron.r)$会变得非常大，导致数值不稳定。另外，这个核函数的几何意义并不如下文将引入的高斯核清晰。\
 不知道$phi(dot)$的时候，我们怎么知道一个函数（例如$e^(chevron.l x,y chevron.r)$）是否是某个$phi(dot)$对应的核函数呢？还好Mercer 条件给出了判定方法：
 #theorem-box[
-  Mercer 条件：关于两个变量对称的函数$K(dot,dot)$是某个特征映射$phi(dot)$对应的核函数的充分必要条件是，对于任意有限集合${x^(1), x^(2), ..., x^(n)}$，由$K(x^(i), x^(j))$构成的矩阵$K in bb(R)^(n times n)$是半正定的。
+  Mercer 条件：关于两个变量对称的函数$K(dot,dot)$是某个特征映射$phi(dot)$对应的核函数的充分必要条件是，对于任意有限集合${x^(1), x^(2), ...,
+    x^(n)}$，由$K(x^(i), x^(j))$构成的矩阵$K in bb(R)^(n times n)$是半正定的。
 ]
 #pagebreak()
 
 #theorem-box[
-  在分类问题中，核方法 是解决非线性问题的核心工具之一。它通过隐式地将原始低维数据映射到高维特征空间，让原本线性不可分的数据变得可分，进而用线性模型解决非线性问题。支持向量机（SVM）、高斯过程回归（GPR）等经典算法都依赖核方法实现强大的非线性拟合能力。
+  在分类问题中，核方法
+    是解决非线性问题的核心工具之一。它通过隐式地将原始低维数据映射到高维特征空间，让原本线性不可分的数据变得可分，进而用线性模型解决非线性问题。支持向量机（SVM）、高斯过程回归（GPR）等经典算法都依赖核方法实现强大的非线性拟合能力。
 ]
 #place(
   bottom+left,
@@ -122,11 +127,13 @@ $,然后令$p -> +oo$,则有：$K(x,y)=e^(chevron.l x,y chevron.r)$ ,这样我�
 );
 
 #pagebreak()
-在SVM中，给定训练数据集${(x^(i), y^(i)) | i=1,2,...,n}$，其中$x^(i) in bb(R)^d$为输入特征，$y^(i) in {+1, -1}$为类别标签。SVM的目标是找到一个最优超平面，将不同类别的数据点分开。对于线性可分的数据，SVM通过求解以下优化问题来找到最优超平面：
+在SVM中，给定训练数据集${(x^(i), y^(i)) | i=1,2,...,n}$，其中$x^(i) in bb(R)^d$为输入特征，$y^(i) in
+  {+1, -1}$为类别标签。SVM的目标是找到一个最优超平面，将不同类别的数据点分开。对于线性可分的数据，SVM通过求解以下优化问题来找到最优超平面：
 #v(-1em)
 $
 cases(
-min_alpha quad 1/2 sum_(i = 1)^n sum_(j = 1)^n alpha_i alpha_j y_i y_j bold(x)_i^T bold(x)_j - sum_(i = 1)^n alpha_i ,  sum_(i = 1)^n alpha_i y_i = 0 ,
+min_alpha quad 1/2 sum_(i = 1)^n sum_(j = 1)^n alpha_i alpha_j y_i y_j bold(x)_i^T bold(x)_j -
+  sum_(i = 1)^n alpha_i ,  sum_(i = 1)^n alpha_i y_i = 0 ,
  alpha_i >= 0 quad (1<=i<=n)
 )
 $
@@ -134,14 +141,16 @@ $
 此时，优化问题变为：
 $
 cases(
-min_alpha quad 1/2 sum_(i = 1)^n sum_(j = 1)^n alpha_i alpha_j y_i y_j K(bold(x)_i, bold(x)_j) - sum_(i = 1)^n alpha_i ,  sum_(i = 1)^n alpha_i y_i = 0 ,
+min_alpha quad 1/2 sum_(i = 1)^n sum_(j = 1)^n alpha_i alpha_j y_i y_j K(bold(x)_i, bold(x)_j) -
+  sum_(i = 1)^n alpha_i ,  sum_(i = 1)^n alpha_i y_i = 0 ,
  alpha_i >= 0 quad (1<=i<=n)
 )
 $
 我们希望核函数有以下性质：
 - 隐式映射：核函数应能隐式地将数据映射到高维空间
 - 数值稳定：如核函数的值域为[0,1]
-- 位移不变:也就是说$K(bold(x), bold(y)) = K(bold(x) - bold(y))$，核函数的输出只与两个数据点的距离有关。这是因为在分类问题中，我们倾向于将距离较近的数据点归为同一类，距离较远的数据点归为不同类。而和这两点是否靠近原点无关。
+- 位移不变:也就是说$K(bold(x), bold(y)) =
+  K(bold(x) - bold(y))$，核函数的输出只与两个数据点的距离有关。这是因为在分类问题中，我们倾向于将距离较近的数据点归为同一类，距离较远的数据点归为不同类。而和这两点是否靠近原点无关。
 #pagebreak()
 其中最常用的核函数之一便是高斯核：
 #v(-1em)
@@ -165,10 +174,12 @@ $
 当数据集规模较大时(如样本数$N=10000$)，使用核方法需要计算核矩阵（Kernel Matrix）$K in bb(R)^(N times N)$,此时会面临两个严重问题:
 - 时间复杂度：计算核矩阵需要$O(N^2)$次核函数运算,计算量巨大；
 - 空间复杂度：储存核矩阵需要$O(N^2)$的内存,对于大规模数据集,内存需求难以满足。
-因此，核方法在非线性核函数 + 大数据集的场景下几乎不可用。而随机傅里叶特征（Random Fourier Features, RFF）正是为解决这个问题而生 —— 它通过显式的低维映射，用 $O(N dot D)$ 的复杂度（$D$ 为映射后维度，通常 $D lt.double N$)近似核函数，让大数据下的非线性建模成为可能。
+因此，核方法在非线性核函数 + 大数据集的场景下几乎不可用。而随机傅里叶特征（Random Fourier Features,
+  RFF）正是为解决这个问题而生 —— 它通过显式的低维映射，用 $O(N dot D)$ 的复杂度（$D$ 为映射后维度，通常 $D lt.double N$)近似核函数，让大数据下的非线性建模成为可能。
 == RFF 的核心思想
 #theorem-box[
-  RFF 的核心目标是：找到一个#text(fill: blue, "显式")的低维映射$Z(dot):bb(R)^d -> bb(R)^D$,使得：$k(bold(x),bold(y)) approx Z(bold(x))^T dot Z(bold(y))$.
+  RFF 的核心目标是：找到一个#text(fill: blue, "显式")的低维映射$Z(dot):bb(R)^d -> bb(R)^D$,使得：$k(bold(x),bold(y)) approx
+    Z(bold(x))^T dot Z(bold(y))$.
 ]
 这样一来，我们可以先通过 $Z(dot)$ 将原始数据映射到$D$维特征空间,然后利用线性模型替代非线性核方法，可以大幅降低计算复杂度。
 #caution-box[RFF 仅适用于移位不变核。]
